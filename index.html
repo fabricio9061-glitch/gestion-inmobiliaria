@@ -931,6 +931,11 @@
                                     <option value="">Seleccionar mes...</option>
                                 </select>
                             </div>
+                            <div class="stats-filter-btns">
+                                <button class="stats-filter-btn active" id="monthlyFilterAll" onclick="filterMonthlyStats('all')">Todos</button>
+                                <button class="stats-filter-btn" id="monthlyFilterVentas" onclick="filterMonthlyStats('venta')">Ventas</button>
+                                <button class="stats-filter-btn" id="monthlyFilterAlquileres" onclick="filterMonthlyStats('alquiler')">Alquileres</button>
+                            </div>
                             <div id="monthlyStats" style="display: none;">
                                 <div class="stat-row">
                                     <span class="stat-label">Clientes nuevos</span>
@@ -940,13 +945,17 @@
                                     <span class="stat-label">Llamadas realizadas</span>
                                     <span class="stat-value" id="monthlyCallsMade">0</span>
                                 </div>
-                                <div class="stat-row">
+                                <div class="stat-row" id="monthlyRowTasaciones">
                                     <span class="stat-label">Tasaciones entregadas</span>
                                     <span class="stat-value" id="monthlyTasaciones">0</span>
                                 </div>
                                 <div class="stat-row">
-                                    <span class="stat-label">Ventas/Alquileres</span>
+                                    <span class="stat-label" id="monthlyLabelVentas">Ventas/Alquileres</span>
                                     <span class="stat-value" id="monthlySales">0</span>
+                                </div>
+                                <div class="stat-row" id="monthlyRowOtraInmobiliaria" style="display: none;">
+                                    <span class="stat-label">Alquilados por otra inmobiliaria</span>
+                                    <span class="stat-value" id="monthlyOtraInmobiliaria">0</span>
                                 </div>
                             </div>
                         </div>
@@ -1875,6 +1884,7 @@
         function archivarCliente() {
             if (confirm('¿Archivar este cliente?')) {
                 clients[currentClientIndex].archivado = true;
+                clients[currentClientIndex].fechaArchivado = new Date().toISOString();
                 clients[currentClientIndex].ultimoContacto = new Date().toISOString();
                 saveToFirebase();
                 displayClients();
@@ -2292,11 +2302,38 @@
                 if (client.fechaCreacion) { var f = new Date(client.fechaCreacion); mesesUnicos[f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0')] = true; }
                 if (client.historialLlamadas) { for (var j = 0; j < client.historialLlamadas.length; j++) { if (client.historialLlamadas[j].fecha) { var fc = new Date(client.historialLlamadas[j].fecha); mesesUnicos[fc.getFullYear() + '-' + String(fc.getMonth() + 1).padStart(2, '0')] = true; } } }
                 if (client.venta && client.venta.fecha) { var fv = new Date(client.venta.fecha); mesesUnicos[fv.getFullYear() + '-' + String(fv.getMonth() + 1).padStart(2, '0')] = true; }
+                if (client.fechaArchivado) { var fa = new Date(client.fechaArchivado); mesesUnicos[fa.getFullYear() + '-' + String(fa.getMonth() + 1).padStart(2, '0')] = true; }
             }
             var mesesArray = Object.keys(mesesUnicos).sort().reverse();
             selector.innerHTML = '<option value="">Seleccionar mes...</option>';
             var nombres = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             for (var k = 0; k < mesesArray.length; k++) { var parts = mesesArray[k].split('-'); var opt = document.createElement('option'); opt.value = mesesArray[k]; opt.textContent = nombres[parseInt(parts[1]) - 1] + ' ' + parts[0]; selector.appendChild(opt); }
+        }
+
+        var monthlyStatsFilter = 'all';
+        
+        function filterMonthlyStats(tipo) {
+            monthlyStatsFilter = tipo;
+            document.getElementById('monthlyFilterAll').classList.toggle('active', tipo === 'all');
+            document.getElementById('monthlyFilterVentas').classList.toggle('active', tipo === 'venta');
+            document.getElementById('monthlyFilterAlquileres').classList.toggle('active', tipo === 'alquiler');
+            
+            // Mostrar/ocultar filas según tipo
+            var soloAlquiler = tipo === 'alquiler';
+            document.getElementById('monthlyRowTasaciones').style.display = soloAlquiler ? 'none' : 'flex';
+            document.getElementById('monthlyRowOtraInmobiliaria').style.display = soloAlquiler ? 'flex' : 'none';
+            
+            // Cambiar texto
+            var labelVentas = document.getElementById('monthlyLabelVentas');
+            if (tipo === 'venta') {
+                labelVentas.textContent = 'Ventas';
+            } else if (tipo === 'alquiler') {
+                labelVentas.textContent = 'Alquileres (nuestros)';
+            } else {
+                labelVentas.textContent = 'Ventas/Alquileres';
+            }
+            
+            updateMonthlyStats();
         }
 
         function updateMonthlyStats() {
@@ -2306,7 +2343,7 @@
             statsDiv.style.display = 'block';
             var parts = mesSeleccionado.split('-');
             var year = parseInt(parts[0]), month = parseInt(parts[1]);
-            var clientesNuevos = 0, llamadasMes = 0, tasacionesMes = 0, ventasMes = 0;
+            var clientesNuevos = 0, llamadasMes = 0, tasacionesMes = 0, ventasMes = 0, otraInmobiliaria = 0;
             
             var selectedAgent = isAdmin ? document.getElementById('monthlyAgentSelector').value : currentAgent;
             
@@ -2314,15 +2351,27 @@
                 var client = clients[i];
                 if (selectedAgent !== 'all' && client.agente !== selectedAgent) continue;
                 if (!isAdmin && client.agente !== currentAgent) continue;
+                if (monthlyStatsFilter !== 'all' && client.tipoOperacion !== monthlyStatsFilter) continue;
+                
                 if (client.fechaCreacion) { var fc = new Date(client.fechaCreacion); if (fc.getFullYear() === year && fc.getMonth() + 1 === month) clientesNuevos++; }
                 if (client.historialLlamadas) { for (var j = 0; j < client.historialLlamadas.length; j++) { if (client.historialLlamadas[j].fecha) { var fl = new Date(client.historialLlamadas[j].fecha); if (fl.getFullYear() === year && fl.getMonth() + 1 === month) llamadasMes++; } } }
                 if (client.seguimiento.fechaEntrega) { var fe = new Date(client.seguimiento.fechaEntrega); if (fe.getFullYear() === year && fe.getMonth() + 1 === month) tasacionesMes++; }
                 if (client.venta && client.venta.fecha) { var fv = new Date(client.venta.fecha); if (fv.getFullYear() === year && fv.getMonth() + 1 === month) ventasMes++; }
+                
+                // Contar alquileres por otra inmobiliaria
+                if (client.tipoOperacion === 'alquiler' && client.seguimiento.loAlquilamosNosotros === false) {
+                    // Usar fecha de archivado o última modificación del mes
+                    if (client.fechaArchivado) {
+                        var fa = new Date(client.fechaArchivado);
+                        if (fa.getFullYear() === year && fa.getMonth() + 1 === month) otraInmobiliaria++;
+                    }
+                }
             }
             document.getElementById('monthlyNewClients').textContent = clientesNuevos;
             document.getElementById('monthlyCallsMade').textContent = llamadasMes;
             document.getElementById('monthlyTasaciones').textContent = tasacionesMes;
             document.getElementById('monthlySales').textContent = ventasMes;
+            document.getElementById('monthlyOtraInmobiliaria').textContent = otraInmobiliaria;
         }
 
         function showSaveIndicator() {
