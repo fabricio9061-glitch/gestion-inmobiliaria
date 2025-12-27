@@ -3135,10 +3135,16 @@
                 else if (j === 1) { posClass = 'silver'; posEmoji = 'TOP 2'; }
                 else if (j === 2) { posClass = 'bronze'; posEmoji = 'TOP 3'; }
                 
+                // Botón de eliminar solo para ST (y no para el admin principal)
+                var removeBtn = '';
+                if (isSupport && agent.name !== ADMIN_USER) {
+                    removeBtn = '<button onclick="removeFromTop(\'' + agent.name.replace(/'/g, "\\'") + '\')" style="background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 0.7em; cursor: pointer; margin-left: 8px;" title="Eliminar del ranking">×</button>';
+                }
+                
                 html += '<div class="top-agent ' + posClass + '">' +
                     '<div class="top-position">' + posEmoji + '</div>' +
                     '<div class="top-info">' +
-                        '<div class="top-name">' + agent.name + '</div>' +
+                        '<div class="top-name">' + agent.name + removeBtn + '</div>' +
                         '<div class="top-stats">Llam: ' + agent.stats.llamadas + ' | Tas: ' + agent.stats.tasaciones + ' | Exc: ' + agent.stats.exclusivas + ' | Ven: ' + agent.stats.ventas + '</div>' +
                     '</div>' +
                     '<div class="top-score">' + agent.stats.score + ' pts</div>' +
@@ -3151,6 +3157,79 @@
             var containerGeneral = document.getElementById('topAgentsGeneral');
             if (containerGeneral) {
                 containerGeneral.innerHTML = contentHtml;
+            }
+        }
+
+        function removeFromTop(agentName) {
+            if (!isSupport) return;
+            
+            // Contar clientes de este agente
+            var clientCount = 0;
+            for (var i = 0; i < clients.length; i++) {
+                if (clients[i].agente === agentName) clientCount++;
+            }
+            
+            var action = prompt(
+                '¿Qué deseas hacer con "' + agentName + '"?\n\n' +
+                'Este agente tiene ' + clientCount + ' cliente(s).\n\n' +
+                'Escribe una opción:\n' +
+                '1 = Eliminar agente Y sus clientes\n' +
+                '2 = Reasignar clientes a otro agente\n' +
+                '3 = Cancelar'
+            );
+            
+            if (action === '1') {
+                if (!confirm('⚠️ ¿Estás SEGURO?\n\nSe eliminarán ' + clientCount + ' clientes de "' + agentName + '".\n\nEsta acción NO se puede deshacer.')) {
+                    return;
+                }
+                
+                // Eliminar clientes del agente
+                clients = clients.filter(function(c) { return c.agente !== agentName; });
+                saveToFirebase();
+                displayClients();
+                updateStats();
+                updateTopAgents();
+                alert('✅ Se eliminaron ' + clientCount + ' clientes de "' + agentName + '"');
+                
+            } else if (action === '2') {
+                var newAgent = prompt('Escribe el nombre EXACTO del agente al que quieres reasignar los ' + clientCount + ' clientes:');
+                
+                if (!newAgent || newAgent.trim() === '') {
+                    alert('Operación cancelada');
+                    return;
+                }
+                
+                newAgent = newAgent.trim();
+                
+                // Verificar que el nuevo agente existe
+                var agentExists = false;
+                for (var j = 0; j < users.length; j++) {
+                    if (users[j].username === newAgent) {
+                        agentExists = true;
+                        break;
+                    }
+                }
+                
+                if (!agentExists) {
+                    if (!confirm('El agente "' + newAgent + '" no existe en el sistema.\n\n¿Deseas reasignar los clientes de todas formas?')) {
+                        return;
+                    }
+                }
+                
+                // Reasignar clientes
+                var reasignados = 0;
+                for (var k = 0; k < clients.length; k++) {
+                    if (clients[k].agente === agentName) {
+                        clients[k].agente = newAgent;
+                        reasignados++;
+                    }
+                }
+                
+                saveToFirebase();
+                displayClients();
+                updateStats();
+                updateTopAgents();
+                alert('✅ Se reasignaron ' + reasignados + ' clientes de "' + agentName + '" a "' + newAgent + '"');
             }
         }
 
