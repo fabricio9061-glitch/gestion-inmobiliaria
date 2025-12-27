@@ -1250,7 +1250,10 @@
                         
                         <!-- TOP Agentes visible para todos -->
                         <div class="stats-card" style="margin-top: 15px;">
-                            <h3>🏆 Top 10 Agentes</h3>
+                            <h3 style="display: flex; align-items: center; gap: 10px;">
+                                🏆 Top 10 Agentes - <span id="topMonthDisplay"></span>
+                                <span onclick="showPointsInfo()" style="background: #17a2b8; color: white; border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.6em; cursor: pointer; font-weight: bold;" title="Ver sistema de puntos">?</span>
+                            </h3>
                             <div id="topAgentsGeneral"></div>
                         </div>
                     </div>
@@ -3092,24 +3095,83 @@
         }
 
         function getAgentScore(agentName) {
-            var llamadas = 0, tasaciones = 0, exclusivas = 0, noExclusivas = 0, ventas = 0;
+            var llamadas = 0, tasaciones = 0, exclusivas = 0, noExclusivas = 0, ventas = 0, alquileres = 0;
+            
+            // Obtener el mes y año actual
+            var now = new Date();
+            var currentMonth = now.getMonth();
+            var currentYear = now.getFullYear();
+            
             for (var i = 0; i < clients.length; i++) {
                 var client = clients[i];
                 if (client.agente !== agentName) continue;
-                llamadas += client.cantidadLlamadas || 0;
-                if (client.seguimiento.tasacionEntregada === true) tasaciones++;
-                if (client.seguimiento.tipoExclusiva) {
-                    if (client.seguimiento.tipoExclusiva === 'No Exclusiva') {
-                        noExclusivas++;
-                    } else {
-                        exclusivas++;
+                
+                // Contar llamadas del mes actual
+                if (client.historialLlamadas && client.historialLlamadas.length > 0) {
+                    for (var j = 0; j < client.historialLlamadas.length; j++) {
+                        var llamada = client.historialLlamadas[j];
+                        if (llamada.fecha) {
+                            var fechaLlamada = new Date(llamada.fecha);
+                            if (fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
+                                llamadas++;
+                            }
+                        }
                     }
                 }
-                if (client.seguimiento.vendida) ventas++;
+                
+                // Contar tasaciones del mes actual
+                if (client.seguimiento.tasacionEntregada === true && client.seguimiento.fechaEntrega) {
+                    var fechaTas = new Date(client.seguimiento.fechaEntrega);
+                    if (fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
+                        tasaciones++;
+                    }
+                }
+                
+                // Contar exclusivas del mes (usamos fecha de tasación o creación como referencia)
+                if (client.seguimiento.tipoExclusiva) {
+                    var fechaRef = client.seguimiento.fechaEntrega || client.fechaCreacion;
+                    if (fechaRef) {
+                        var fechaExc = new Date(fechaRef);
+                        if (fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
+                            if (client.seguimiento.tipoExclusiva === 'No Exclusiva') {
+                                noExclusivas++;
+                            } else {
+                                exclusivas++;
+                            }
+                        }
+                    }
+                }
+                
+                // Contar ventas y alquileres del mes actual
+                if (client.seguimiento.vendida && client.venta && client.venta.fecha) {
+                    var fechaVenta = new Date(client.venta.fecha);
+                    if (fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
+                        if (client.tipoOperacion === 'alquiler') {
+                            alquileres++;
+                        } else {
+                            ventas++;
+                        }
+                    }
+                }
             }
-            // Puntuación: ventas*50 + exclusivas*30 + tasaciones*20 + llamadas*1
-            var score = (ventas * 50) + (exclusivas * 30) + (tasaciones * 20) + (llamadas * 1);
-            return { llamadas: llamadas, tasaciones: tasaciones, exclusivas: exclusivas, noExclusivas: noExclusivas, ventas: ventas, score: score };
+            
+            // Puntuación: ventas*50 + alquileres*40 + exclusivas*30 + tasaciones*20 + llamadas*1
+            // Puntuación: ventas*60 + alquileres*25 + exclusivas*10 + tasaciones*5 + llamadas*1
+            var score = (ventas * 60) + (alquileres * 25) + (exclusivas * 10) + (tasaciones * 5) + (llamadas * 1);
+            return { llamadas: llamadas, tasaciones: tasaciones, exclusivas: exclusivas, noExclusivas: noExclusivas, ventas: ventas, alquileres: alquileres, score: score };
+        }
+
+        function showPointsInfo() {
+            alert(
+                '🏆 SISTEMA DE PUNTOS MENSUAL\n\n' +
+                'Los puntos se calculan por actividades del mes actual:\n\n' +
+                '📞 Llamadas realizadas: 1 punto c/u\n' +
+                '📋 Tasaciones entregadas: 5 puntos c/u\n' +
+                '⭐ Exclusivas firmadas: 10 puntos c/u\n' +
+                '🔑 Alquileres cerrados: 25 puntos c/u\n' +
+                '🏠 Ventas cerradas: 60 puntos c/u\n\n' +
+                '¡El ranking se reinicia cada mes!'
+            );
         }
 
         function updateTopAgents() {
@@ -3123,11 +3185,23 @@
             
             agentScores.sort(function(a, b) { return b.stats.score - a.stats.score; });
             
+            // Mostrar el mes actual en el título
+            var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            var now = new Date();
+            var monthDisplay = document.getElementById('topMonthDisplay');
+            if (monthDisplay) {
+                monthDisplay.textContent = meses[now.getMonth()] + ' ' + now.getFullYear();
+            }
+            
             var html = '';
             var limit = Math.min(10, agentScores.length);
             
             for (var j = 0; j < limit; j++) {
                 var agent = agentScores[j];
+                
+                // Solo mostrar agentes con puntuación > 0
+                if (agent.stats.score === 0) continue;
+                
                 var posClass = '';
                 var posEmoji = (j + 1) + '.';
                 
@@ -3145,18 +3219,20 @@
                     '<div class="top-position">' + posEmoji + '</div>' +
                     '<div class="top-info">' +
                         '<div class="top-name">' + agent.name + removeBtn + '</div>' +
-                        '<div class="top-stats">Llam: ' + agent.stats.llamadas + ' | Tas: ' + agent.stats.tasaciones + ' | Exc: ' + agent.stats.exclusivas + ' | Ven: ' + agent.stats.ventas + '</div>' +
+                        '<div class="top-stats">📞' + agent.stats.llamadas + ' | 📋' + agent.stats.tasaciones + ' | ⭐' + agent.stats.exclusivas + ' | 🏠' + agent.stats.ventas + ' | 🔑' + agent.stats.alquileres + '</div>' +
                     '</div>' +
                     '<div class="top-score">' + agent.stats.score + ' pts</div>' +
                 '</div>';
             }
             
-            var contentHtml = html || '<p style="color:#666">No hay agentes</p>';
+            if (html === '') {
+                html = '<p style="color:#666; text-align: center; padding: 20px;">No hay actividad este mes</p>';
+            }
             
             // Actualizar el TOP en la vista general (visible para todos)
             var containerGeneral = document.getElementById('topAgentsGeneral');
             if (containerGeneral) {
-                containerGeneral.innerHTML = contentHtml;
+                containerGeneral.innerHTML = html;
             }
         }
 
@@ -3242,7 +3318,7 @@
                 var stats = getAgentScore(agent);
                 html += '<div class="stat-row" style="flex-wrap: wrap; gap: 5px;">' +
                     '<span class="stat-label" style="flex: 1; min-width: 100px;">' + agent + '</span>' +
-                    '<span class="stat-value" style="font-size: 0.8em; text-align: right;">Llam: ' + stats.llamadas + ' | Tas: ' + stats.tasaciones + ' | Exc: ' + stats.exclusivas + ' | NoExc: ' + stats.noExclusivas + ' | Ven: ' + stats.ventas + '</span>' +
+                    '<span class="stat-value" style="font-size: 0.8em; text-align: right;">📞' + stats.llamadas + ' | 📋' + stats.tasaciones + ' | ⭐' + stats.exclusivas + ' | 🏠' + stats.ventas + ' | 🔑' + stats.alquileres + ' | <strong>' + stats.score + 'pts</strong></span>' +
                 '</div>';
             }
             container.innerHTML = html || '<p style="color:#666">No hay agentes</p>';
