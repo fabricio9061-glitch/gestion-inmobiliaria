@@ -331,7 +331,7 @@
         .save-indicator {
             position: fixed;
             bottom: 20px;
-            right: 20px;
+            left: 20px;
             background: #28a745;
             color: white;
             padding: 10px 20px;
@@ -339,6 +339,7 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             display: none;
             animation: fadeInOut 2s;
+            z-index: 999;
         }
         @keyframes fadeInOut { 0%, 100% { opacity: 0; } 10%, 90% { opacity: 1; } }
         .call-history {
@@ -977,45 +978,54 @@
 
             <div class="content">
                 <div class="form-section">
-                    <h2 style="margin-bottom: 25px; color: #333;">📝 Datos del Cliente</h2>
-                    <form id="clientForm">
-                        <div class="form-group">
-                            <label for="nombre">Nombre del Cliente *</label>
-                            <input type="text" id="nombre" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="telefono">Numero Telefonico *</label>
-                            <input type="tel" id="telefono" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tipoOperacion">Tipo de Operacion *</label>
-                            <select id="tipoOperacion" required>
-                                <option value="">Seleccionar...</option>
-                                <option value="venta">Venta</option>
-                                <option value="alquiler">Alquiler</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="direccion">Direccion de la Propiedad</label>
-                            <input type="text" id="direccion">
-                        </div>
-                        <div class="form-group">
-                            <label for="linkPropiedad">Link de la Propiedad</label>
-                            <input type="text" id="linkPropiedad" placeholder="https://...">
-                        </div>
-                        <div class="form-group">
-                            <label for="fechaLlamada">Fecha de Primera Llamada</label>
-                            <input type="date" id="fechaLlamada">
-                        </div>
-                        <div class="form-group">
-                            <label for="nota">Notas</label>
-                            <textarea id="nota"></textarea>
-                        </div>
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary">Guardar Cliente</button>
-                            <button type="button" class="btn btn-secondary" onclick="resetForm()">Limpiar</button>
-                        </div>
-                    </form>
+                    <!-- Botón para añadir cliente -->
+                    <button type="button" class="btn btn-primary" id="toggleFormBtn" onclick="toggleClientForm()" style="width: 100%; padding: 15px; font-size: 1.1em; margin-bottom: 20px;">
+                        ➕ Añadir Cliente
+                    </button>
+                    
+                    <!-- Formulario colapsable -->
+                    <div id="clientFormContainer" style="display: none;">
+                        <h2 style="margin-bottom: 25px; color: #333;">📝 Datos del Cliente</h2>
+                        <form id="clientForm">
+                            <div class="form-group">
+                                <label for="nombre">Nombre del Cliente *</label>
+                                <input type="text" id="nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="telefono">Numero Telefonico *</label>
+                                <input type="tel" id="telefono" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tipoOperacion">Tipo de Operacion *</label>
+                                <select id="tipoOperacion" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="venta">Venta</option>
+                                    <option value="alquiler">Alquiler</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="direccion">Direccion de la Propiedad</label>
+                                <input type="text" id="direccion">
+                            </div>
+                            <div class="form-group">
+                                <label for="linkPropiedad">Link de la Propiedad</label>
+                                <input type="text" id="linkPropiedad" placeholder="https://...">
+                            </div>
+                            <div class="form-group">
+                                <label for="fechaLlamada">Fecha de Primera Llamada</label>
+                                <input type="date" id="fechaLlamada">
+                            </div>
+                            <div class="form-group">
+                                <label for="nota">Notas</label>
+                                <textarea id="nota"></textarea>
+                            </div>
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-primary">Guardar Cliente</button>
+                                <button type="button" class="btn btn-secondary" onclick="resetForm()">Limpiar</button>
+                                <button type="button" class="btn btn-danger" onclick="toggleClientForm()">Cerrar</button>
+                            </div>
+                        </form>
+                    </div>
 
                     <div class="clients-list">
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
@@ -1223,6 +1233,15 @@
                 <span class="close" onclick="closeSaleModal()">&times;</span>
             </div>
             <form id="saleForm">
+                <div class="form-group">
+                    <label for="monedaVenta">Moneda *</label>
+                    <select id="monedaVenta" required style="font-size: 1.1em;">
+                        <option value="">Seleccionar moneda...</option>
+                        <option value="USD">🇺🇸 Dólares (USD)</option>
+                        <option value="UYU">🇺🇾 Pesos Uruguayos (UYU)</option>
+                        <option value="EUR">🇪🇺 Euros (EUR)</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="precioVenta" id="precioLabel">Precio de Venta *</label>
                     <input type="number" id="precioVenta" required>
@@ -1884,6 +1903,9 @@
             resetForm();
             populateMonthSelector();
             if (isAdmin) populateAgentSelector();
+            
+            // Cerrar el formulario después de guardar
+            toggleClientForm();
         }
 
         function createEmptySeguimiento() {
@@ -1981,7 +2003,12 @@
                 if (client.venta) {
                     var tipoOp = client.tipoOperacion === 'venta' ? 'VENDIDA' : 'ALQUILADA';
                     var tipoPers = client.tipoOperacion === 'venta' ? 'Comprador' : 'Inquilino';
-                    ventaHTML = '<div style="margin-top: 10px; padding: 10px; background: #c8e6c9; border-radius: 5px; color: #2e7d32;"><strong>' + tipoOp + '</strong> - $' + client.venta.precio + ' - ' + tipoPers + ': ' + client.venta.nombreComprador + '</div>';
+                    var monedaSymbol = 'US$'; // Default
+                    if (client.venta.moneda === 'UYU') monedaSymbol = '$';
+                    else if (client.venta.moneda === 'EUR') monedaSymbol = '€';
+                    else if (client.venta.moneda === 'USD') monedaSymbol = 'US$';
+                    var monedaFlag = client.venta.moneda === 'UYU' ? '🇺🇾' : (client.venta.moneda === 'EUR' ? '🇪🇺' : '🇺🇸');
+                    ventaHTML = '<div style="margin-top: 10px; padding: 10px; background: #c8e6c9; border-radius: 5px; color: #2e7d32;"><strong>' + tipoOp + '</strong> ' + monedaFlag + ' ' + monedaSymbol + ' ' + client.venta.precio + ' - ' + tipoPers + ': ' + client.venta.nombreComprador + '</div>';
                 }
                 var agentBadge = (isAdmin && filter === 'all') ? '<span class="agent-badge">' + (client.agente || 'Sin agente') + '</span>' : '';
                 
@@ -2374,8 +2401,20 @@
         function closeSaleModal() { document.getElementById('saleModal').style.display = 'none'; document.getElementById('saleForm').reset(); }
 
         function registerSale() {
+            var moneda = document.getElementById('monedaVenta').value;
+            if (!moneda) {
+                alert('Por favor selecciona una moneda');
+                return;
+            }
+            
             var client = clients[currentClientIndex];
-            client.venta = { precio: document.getElementById('precioVenta').value, nombreComprador: document.getElementById('nombreComprador').value, telefono: document.getElementById('telefonoComprador').value, fecha: document.getElementById('fechaVenta').value };
+            client.venta = { 
+                precio: document.getElementById('precioVenta').value, 
+                moneda: moneda,
+                nombreComprador: document.getElementById('nombreComprador').value, 
+                telefono: document.getElementById('telefonoComprador').value, 
+                fecha: document.getElementById('fechaVenta').value 
+            };
             client.seguimiento.vendida = true;
             client.ultimoContacto = new Date().toISOString();
             
@@ -2391,7 +2430,9 @@
             if (isAdmin) populateAgentSelector();
             closeSaleModal();
             closeModal();
-            alert(client.tipoOperacion === 'alquiler' ? ' ¡Alquiler registrado! El cliente fue archivado automáticamente.' : ' ¡Venta registrada! El cliente fue archivado automáticamente.');
+            
+            var monedaSymbol = moneda === 'USD' ? 'US$' : (moneda === 'UYU' ? '$' : '€');
+            alert(client.tipoOperacion === 'alquiler' ? ' ¡Alquiler registrado en ' + monedaSymbol + '! El cliente fue archivado automáticamente.' : ' ¡Venta registrada en ' + monedaSymbol + '! El cliente fue archivado automáticamente.');
         }
 
         // ============ EDIT/DELETE ============
@@ -2405,6 +2446,9 @@
             document.getElementById('linkPropiedad').value = client.linkPropiedad || '';
             document.getElementById('fechaLlamada').value = client.fechaLlamada;
             document.getElementById('nota').value = client.nota;
+            
+            // Abrir el formulario si está cerrado
+            openFormForEdit();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -2420,7 +2464,37 @@
             }
         }
 
-        function resetForm() { document.getElementById('clientForm').reset(); editingIndex = -1; }
+        function resetForm() { 
+            document.getElementById('clientForm').reset(); 
+            editingIndex = -1; 
+        }
+
+        function toggleClientForm() {
+            var container = document.getElementById('clientFormContainer');
+            var btn = document.getElementById('toggleFormBtn');
+            
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                btn.innerHTML = '✖️ Cerrar Formulario';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            } else {
+                container.style.display = 'none';
+                btn.innerHTML = '➕ Añadir Cliente';
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary');
+                resetForm();
+            }
+        }
+
+        function openFormForEdit() {
+            var container = document.getElementById('clientFormContainer');
+            var btn = document.getElementById('toggleFormBtn');
+            container.style.display = 'block';
+            btn.innerHTML = '✖️ Cerrar Formulario';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        }
 
         // ============ STATS ============
         function switchStatsTab(tab) {
