@@ -2144,15 +2144,15 @@
             client.cantidadLlamadas = client.historialLlamadas.length;
             client.ultimoContacto = now.toISOString();
             
-            // Marcar que se llamó en seguimiento
-            if (client.seguimiento.seLlamo === null) {
-                client.seguimiento.seLlamo = true;
-            }
+            // Marcar que se llamó en seguimiento (siempre)
+            client.seguimiento.seLlamo = true;
             
             saveToFirebase();
             displayClients();
             updateStats();
-            alert('✅ Llamada registrada correctamente');
+            populateMonthSelector();
+            if (isAdmin) populateAgentSelector();
+            alert('✅ Llamada registrada correctamente.\nSe contabilizó en tus estadísticas.');
         }
 
         function displayClients() {
