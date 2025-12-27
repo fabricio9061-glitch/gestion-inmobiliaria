@@ -644,6 +644,69 @@
             .form-section { border-right: none; border-bottom: 2px solid #e0e0e0; }
             .agent-info { position: static; margin-bottom: 15px; text-align: center; }
         }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { padding: 15px; }
+            .header h1 { font-size: 1.3em; }
+            .menu-container { top: 10px; right: 10px; }
+            .agent-info { position: static; margin-bottom: 10px; text-align: center; background: rgba(255,255,255,0.15); padding: 8px; }
+            .form-section, .stats-section { padding: 15px; }
+            .form-group input, .form-group select, .form-group textarea { padding: 10px; font-size: 16px; }
+            .btn-group { flex-direction: column; }
+            .client-info { grid-template-columns: 1fr; }
+            .client-header { flex-direction: column; align-items: flex-start; }
+            .client-actions { width: 100%; justify-content: flex-start; margin-top: 10px; }
+            .btn-small { padding: 10px 12px; font-size: 0.85em; }
+            .tabs { flex-wrap: wrap; gap: 5px; }
+            .tab { padding: 8px 12px; font-size: 0.8em; }
+            .modal-content { margin: 2% auto; padding: 20px; width: 95%; }
+            .top-agent { flex-wrap: wrap; }
+            .top-score { width: 100%; text-align: right; margin-top: 5px; }
+        }
+        /* Botones de contacto */
+        .contact-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        .btn-call-phone {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+        }
+        .btn-maps {
+            background: linear-gradient(135deg, #4285F4, #1a73e8);
+            color: white;
+        }
+        .btn-email {
+            background: linear-gradient(135deg, #EA4335, #c5221f);
+            color: white;
+        }
+        .btn-link {
+            background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -1648,7 +1711,20 @@
                     actionsHTML = '<button class="btn-small btn-call" onclick="openCallModal(' + index + ')">+Llamada</button><button class="btn-small btn-follow" onclick="openFollowUp(' + index + ')">Seguimiento</button><button class="btn-small btn-edit" onclick="editClient(' + index + ')">Editar</button><button class="btn-small btn-delete" onclick="deleteClient(' + index + ')">Borrar</button>';
                 }
                 
-                card.innerHTML = '<div class="client-header"><div><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div><div class="client-actions">' + actionsHTML + '</div></div><div class="client-info"><div class="info-item"><span class="info-label">Teléfono:</span> ' + client.telefono + '</div><div class="info-item"><span class="info-label">Dirección:</span> ' + (client.direccion || 'N/A') + '</div><div class="info-item"><span class="info-label">Llamadas:</span> ' + client.cantidadLlamadas + '</div><div class="info-item"><span class="info-label">Último contacto:</span> ' + fechaFormateada + '</div>' + linkHTML + '</div><span class="stage-badge ' + stage.class + '">' + stage.badge + '</span>' + notaHTML + ventaHTML;
+                // Botones de contacto
+                var phoneClean = client.telefono.replace(/\D/g, '');
+                var contactButtonsHTML = '<div class="contact-buttons">';
+                contactButtonsHTML += '<a href="tel:' + client.telefono + '" class="contact-btn btn-call-phone">📞 Llamar</a>';
+                contactButtonsHTML += '<a href="https://wa.me/598' + phoneClean + '" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>';
+                if (client.direccion) {
+                    contactButtonsHTML += '<a href="https://www.google.com/maps/search/' + encodeURIComponent(client.direccion) + '" target="_blank" class="contact-btn btn-maps">📍 Mapa</a>';
+                }
+                if (client.linkPropiedad) {
+                    contactButtonsHTML += '<a href="' + client.linkPropiedad + '" target="_blank" class="contact-btn btn-link">🔗 Ver Propiedad</a>';
+                }
+                contactButtonsHTML += '</div>';
+                
+                card.innerHTML = '<div class="client-header"><div><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div><div class="client-actions">' + actionsHTML + '</div></div><div class="client-info"><div class="info-item"><span class="info-label">Teléfono:</span> ' + client.telefono + '</div><div class="info-item"><span class="info-label">Dirección:</span> ' + (client.direccion || 'N/A') + '</div><div class="info-item"><span class="info-label">Llamadas:</span> ' + client.cantidadLlamadas + '</div><div class="info-item"><span class="info-label">Último contacto:</span> ' + fechaFormateada + '</div></div>' + contactButtonsHTML + '<span class="stage-badge ' + stage.class + '">' + stage.badge + '</span>' + notaHTML + ventaHTML;
                 list.appendChild(card);
             }
             updateArchivedCount();
