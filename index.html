@@ -225,28 +225,13 @@
             font-weight: bold;
             font-size: 1.1em;
             flex-shrink: 0;
-            overflow: hidden;
             cursor: pointer;
-            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .client-photo img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .client-photo-edit {
-            position: absolute;
-            bottom: -2px;
-            right: -2px;
-            background: #17a2b8;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6em;
-            border: 2px solid white;
+        .client-photo:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
         .client-compact-info {
             flex: 1;
@@ -2138,10 +2123,10 @@
                 var tipoClass = client.tipoOperacion === 'venta' ? 'type-venta' : 'type-alquiler';
                 var fechaFormateada = new Date(client.ultimoContacto).toLocaleDateString('es-ES');
                 
-                // Iniciales para la foto
+                // Iniciales para la burbuja o foto si existe
                 var initials = client.nombre.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2).toUpperCase();
-                var photoHTML = client.foto 
-                    ? '<img src="' + client.foto + '" alt="Foto">' 
+                var photoContent = client.foto 
+                    ? '<img src="' + client.foto + '" alt="Foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' 
                     : initials;
                 
                 // Nota de seguimiento compacta
@@ -2155,7 +2140,7 @@
                 
                 // Sección compacta (siempre visible)
                 var compactHTML = '<div class="client-card-compact" onclick="toggleClientDetails(' + index + ')">';
-                compactHTML += '<div class="client-photo" onclick="event.stopPropagation(); uploadClientPhoto(' + index + ')">' + photoHTML + '<span class="client-photo-edit">📷</span></div>';
+                compactHTML += '<div class="client-photo" onclick="event.stopPropagation(); uploadClientPhoto(' + index + ')" title="Clic para agregar foto">' + photoContent + '</div>';
                 compactHTML += '<div class="client-compact-info">';
                 compactHTML += '<div class="client-compact-header"><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div>';
                 compactHTML += '<div class="client-compact-stage"><span class="stage-badge ' + stage.class + '" style="padding: 2px 8px; font-size: 0.75em;">' + stage.badge + '</span></div>';
