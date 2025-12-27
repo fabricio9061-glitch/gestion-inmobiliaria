@@ -840,56 +840,6 @@
             .top-agent { flex-wrap: wrap; }
             .top-score { width: 100%; text-align: right; margin-top: 5px; }
         }
-        /* Botón flotante de chat */
-        .chat-float-btn {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(135deg, #d2a94d, #b6802d);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 999;
-            font-size: 1.4em;
-            color: white;
-        }
-        .chat-float-btn:hover {
-            transform: scale(1.1);
-        }
-        .chat-float-btn .unread-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            width: 22px;
-            height: 22px;
-            font-size: 0.6em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .chat-modal {
-            position: fixed;
-            bottom: 150px;
-            right: 20px;
-            width: 350px;
-            height: 500px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            z-index: 1002;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .chat-modal.show { display: flex; }
         /* Botones de contacto */
         .contact-buttons {
             display: flex;
@@ -934,137 +884,6 @@
             background: linear-gradient(135deg, #9C27B0, #7B1FA2);
             color: white;
         }
-        /* Burbuja de Soporte */
-        .support-bubble {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #17a2b8, #138496);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            transition: transform 0.3s;
-            font-size: 1.5em;
-            color: white;
-        }
-        .support-bubble:hover { transform: scale(1.1); }
-        .support-inbox-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #28a745, #1e7e34);
-            border-radius: 50%;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            font-size: 1.5em;
-            color: white;
-        }
-        .support-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #dc3545;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 0.7em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        .support-chat {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            width: 350px;
-            max-height: 500px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
-            z-index: 1001;
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .support-chat.show { display: flex; }
-        .support-chat-header {
-            background: linear-gradient(135deg, #17a2b8, #138496);
-            color: white;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .support-chat-header h4 { margin: 0; }
-        .support-chat-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5em;
-            cursor: pointer;
-        }
-        .support-chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            max-height: 300px;
-            background: #f8f9fa;
-        }
-        .support-message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 10px;
-            max-width: 85%;
-        }
-        .support-message.sent {
-            background: #d2a94d;
-            color: white;
-            margin-left: auto;
-        }
-        .support-message.received {
-            background: white;
-            border: 1px solid #ddd;
-        }
-        .support-message-time {
-            font-size: 0.7em;
-            opacity: 0.7;
-            margin-top: 5px;
-        }
-        .support-chat-input {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #eee;
-            gap: 10px;
-        }
-        .support-chat-input input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            outline: none;
-        }
-        .support-chat-input button {
-            background: #17a2b8;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-        }
         /* Paginación */
         .pagination {
             display: flex;
@@ -1095,13 +914,6 @@
         .pagination .page-info {
             font-weight: 600;
             color: #666;
-        }
-        @media (max-width: 768px) {
-            .support-chat {
-                width: calc(100% - 40px);
-                right: 20px;
-                left: 20px;
-            }
         }
     </style>
 </head>
@@ -1452,38 +1264,6 @@
         </div>
     </div>
 
-    <!-- Botón flotante de chat -->
-    <div class="chat-float-btn" id="chatFloatBtn" onclick="toggleChatModal()" style="display: none;">
-        💬
-        <span class="unread-count" id="chatUnreadCount" style="display: none;">0</span>
-    </div>
-
-    <!-- Modal de chat -->
-    <div class="chat-modal" id="chatModal">
-        <div style="background: linear-gradient(135deg, #d2a94d, #b6802d); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
-            <h4 style="margin: 0;">💬 Chat de Agentes</h4>
-            <button onclick="toggleChatModal()" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer;">×</button>
-        </div>
-        <div style="padding: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
-            <div class="chat-tabs" style="margin-bottom: 10px;">
-                <button class="chat-tab active" id="tabChatGrupal" onclick="switchChatTab('grupal')">👥 Grupal</button>
-                <button class="chat-tab" id="tabChatPrivado" onclick="switchChatTab('privado')">👤 Privado</button>
-            </div>
-            <div class="online-users" id="onlineUsersList" style="max-height: 120px;">
-                <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
-                    <span id="onlineCount">0</span> en línea
-                </div>
-                <div id="onlineUsersContainer"></div>
-            </div>
-            <div class="chat-messages" id="chatMessages" style="flex: 1; min-height: 200px;"></div>
-            <div class="chat-input-container">
-                <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-                <button onclick="sendChatMessage()">➤</button>
-            </div>
-        </div>
-    </div>
-    </div>
-
     <!-- Modal de Seguimiento -->
     <div id="followUpModal" class="modal">
         <div class="modal-content">
@@ -1620,48 +1400,6 @@
         </div>
     </div>
 
-    <!-- Burbuja de Soporte (para agentes) -->
-    <div id="supportBubble" class="support-bubble" onclick="toggleSupportChat()" style="display: none;">
-        🛟
-    </div>
-
-    <!-- Botón Buzón de Soporte (para ST) -->
-    <div id="supportInboxBtn" class="support-inbox-btn" onclick="openSupportInbox()" style="display: none;">
-        📬
-        <span id="supportBadge" class="support-badge" style="display: none;">0</span>
-    </div>
-
-    <!-- Chat de Soporte -->
-    <div id="supportChat" class="support-chat">
-        <div class="support-chat-header">
-            <h4>🛟 Soporte Técnico</h4>
-            <button class="support-chat-close" onclick="toggleSupportChat()">&times;</button>
-        </div>
-        <div class="support-chat-messages" id="supportChatMessages">
-            <div class="support-message received">
-                <div>¡Hola! Soy el soporte técnico. ¿En qué puedo ayudarte?</div>
-                <div class="support-message-time">Sistema</div>
-            </div>
-        </div>
-        <div class="support-chat-input">
-            <input type="text" id="supportMessageInput" placeholder="Escribe tu mensaje..." onkeypress="if(event.key==='Enter')sendSupportMessage()">
-            <button onclick="sendSupportMessage()">Enviar</button>
-        </div>
-    </div>
-
-    <!-- Modal Buzón de Soporte (para ST) -->
-    <div id="supportInboxModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h2>📬 Buzón de Soporte</h2>
-                <span class="close" onclick="closeSupportInbox()">&times;</span>
-            </div>
-            <div id="supportInboxList" style="max-height: 400px; overflow-y: auto;">
-                <p style="color: #666; text-align: center;">No hay mensajes pendientes</p>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ============ FIREBASE CONFIG ============
         // IMPORTANTE: Reemplaza esta configuracion con la tuya de Firebase
@@ -1679,7 +1417,6 @@
         var firebaseInitialized = false;
         var SESSION_KEY = 'inmobiliaria_session';
         var ADMIN_USER = 'Diego Hernandez';
-        var SUPPORT_USER = 'Anibal Malave';
         
         // Configuración de oficinas
         var OFICINAS = {
@@ -1693,27 +1430,15 @@
         
         var clients = [];
         var users = [];
-        var supportMessages = [];
         var editingIndex = -1;
         var currentClientIndex = -1;
         var currentAgent = '';
         var isAdmin = false;
-        var isSupport = false;
         var showingArchived = false;
         var statsFilter = 'all';
         var agentStatsFilter = 'all';
         var currentPage = 1;
         var clientsPerPage = 5;
-        
-        // Variables del chat
-        var chatMessages = [];
-        var privateChats = {};
-        var onlineUsers = {};
-        var currentChatTab = 'grupal';
-        var selectedPrivateUser = null;
-        var chatUnreadCount = 0;
-        var lastSeenMessageId = localStorage.getItem('lastSeenMessageId') || '';
-        var presenceInterval = null;
 
         // ============ INICIALIZACION ============
         window.onload = function() {
@@ -1809,64 +1534,10 @@
                 }
             });
 
-            // Escuchar cambios en mensajes de soporte
-            db.ref('supportMessages').on('value', function(snapshot) {
-                var data = snapshot.val();
-                if (data) {
-                    supportMessages = Object.values(data);
-                } else {
-                    supportMessages = [];
-                }
-                if (currentAgent) {
-                    updateSupportBadge();
-                    if (isSupport) {
-                        renderSupportInbox();
-                    }
-                }
-            });
-
-            // Listener de chat grupal
-            db.ref('chatGrupal').orderByChild('timestamp').limitToLast(50).on('value', function(snapshot) {
-                var data = snapshot.val();
-                if (data) {
-                    chatMessages = Object.values(data).sort(function(a, b) {
-                        return a.timestamp - b.timestamp;
-                    });
-                } else {
-                    chatMessages = [];
-                }
-                if (currentAgent && currentChatTab === 'grupal') {
-                    renderChatMessages();
-                }
-            });
-
-            // Listener de usuarios en línea
-            db.ref('presence').on('value', function(snapshot) {
-                var data = snapshot.val();
-                onlineUsers = data || {};
-                if (currentAgent) {
-                    renderOnlineUsers();
-                }
-            });
-
-            // Listener de chats privados
-            db.ref('privateChats').on('value', function(snapshot) {
-                var data = snapshot.val();
-                privateChats = data || {};
-                if (currentAgent && currentChatTab === 'privado' && selectedPrivateUser) {
-                    renderChatMessages();
-                }
-                updateChatUnreadCount();
-            });
-
             // Estado de conexion
             db.ref('.info/connected').on('value', function(snapshot) {
                 if (snapshot.val() === true) {
                     updateSyncStatus('online');
-                    // Marcar usuario como en línea
-                    if (currentAgent) {
-                        setUserPresence(true);
-                    }
                 } else {
                     updateSyncStatus('offline');
                 }
@@ -2146,7 +1817,6 @@
 
             currentAgent = user.username;
             isAdmin = (currentAgent === ADMIN_USER);
-            isSupport = (currentAgent === SUPPORT_USER) || (user.role === 'support');
             localStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username, password: user.password }));
             showMainApp();
         }
@@ -2163,21 +1833,9 @@
         function logout() {
             closeMenu();
             
-            // Marcar como offline
-            setUserPresence(false);
-            if (presenceInterval) {
-                clearInterval(presenceInterval);
-                presenceInterval = null;
-            }
-            
-            // Ocultar chat
-            document.getElementById('chatFloatBtn').style.display = 'none';
-            document.getElementById('chatModal').classList.remove('show');
-            
             localStorage.removeItem(SESSION_KEY);
             currentAgent = '';
             isAdmin = false;
-            isSupport = false;
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
             showLoginScreen();
@@ -2194,14 +1852,8 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('currentAgentDisplay').textContent = currentAgent;
             
-            // Verificar si es soporte técnico
-            isSupport = (currentAgent === SUPPORT_USER);
-            var currentUserData = findUser(currentAgent);
-            if (currentUserData && currentUserData.role === 'support') {
-                isSupport = true;
-            }
-            
             // Mostrar badge de oficina
+            var currentUserData = findUser(currentAgent);
             var oficinaBadge = document.getElementById('oficinaBadge');
             if (currentUserData && currentUserData.oficina && OFICINAS[currentUserData.oficina]) {
                 var oficina = OFICINAS[currentUserData.oficina];
@@ -2226,15 +1878,6 @@
                 document.getElementById('monthlyTitle').textContent = ' Estadísticas Mensuales';
                 document.getElementById('monthlyAgentFilter').style.display = 'block';
                 populateMonthlyAgentSelector();
-            } else if (isSupport) {
-                document.getElementById('adminBadge').style.display = 'inline';
-                document.getElementById('adminBadge').innerHTML = '🛠️ ST';
-                document.getElementById('adminBadge').style.background = '#17a2b8';
-                document.getElementById('tabAgents').style.display = 'none';
-                document.getElementById('filterSection').style.display = 'none';
-                document.getElementById('statsTitle').textContent = ' Mis Estadísticas';
-                document.getElementById('monthlyTitle').textContent = ' Mis Estadísticas Mensuales';
-                document.getElementById('monthlyAgentFilter').style.display = 'none';
             } else {
                 document.getElementById('adminBadge').style.display = 'none';
                 document.getElementById('tabAgents').style.display = 'none';
@@ -2244,25 +1887,12 @@
                 document.getElementById('monthlyAgentFilter').style.display = 'none';
             }
             
-            // Mostrar/ocultar burbuja de soporte y buzón
-            document.getElementById('supportBubble').style.display = isSupport ? 'none' : 'flex';
-            document.getElementById('supportInboxBtn').style.display = isSupport ? 'flex' : 'none';
-            
-            // Mostrar botón de chat
-            document.getElementById('chatFloatBtn').style.display = 'flex';
-            
-            // Inicializar chat
-            setUserPresence(true);
-            renderOnlineUsers();
-            renderChatMessages();
-            
             migrateOldData();
             updateStats();
             displayClients();
             updateArchivedCount();
             populateMonthSelector();
             if (isAdmin) populateAgentSelector();
-            if (isSupport) updateSupportBadge();
             
             // Forzar actualización después de que Firebase termine de cargar
             setTimeout(function() {
@@ -3468,306 +3098,6 @@
         window.onclick = function(event) {
             var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal'];
             for (var i = 0; i < modals.length; i++) { var modal = document.getElementById(modals[i]); if (event.target === modal) { modal.style.display = 'none'; if (modals[i] !== 'callModal') currentClientIndex = -1; } }
-        }
-
-        // ============ CHAT DE AGENTES ============
-        function setUserPresence(isOnline) {
-            if (!db || !currentAgent) return;
-            
-            var currentUserData = findUser(currentAgent);
-            var userPresence = {
-                username: currentAgent,
-                online: isOnline,
-                lastSeen: Date.now(),
-                oficina: currentUserData ? currentUserData.oficina : ''
-            };
-            
-            db.ref('presence/' + sanitizeKey(currentAgent)).set(userPresence);
-            
-            // Configurar desconexión automática
-            if (isOnline) {
-                db.ref('presence/' + sanitizeKey(currentAgent)).onDisconnect().update({
-                    online: false,
-                    lastSeen: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                // Actualizar presencia cada 30 segundos
-                if (presenceInterval) clearInterval(presenceInterval);
-                presenceInterval = setInterval(function() {
-                    if (currentAgent) {
-                        db.ref('presence/' + sanitizeKey(currentAgent) + '/lastSeen').set(Date.now());
-                    }
-                }, 30000);
-            }
-        }
-
-        function sanitizeKey(str) {
-            return str.replace(/[.#$\/\[\]]/g, '_');
-        }
-
-        function switchChatTab(tab) {
-            currentChatTab = tab;
-            
-            // Actualizar tabs
-            document.getElementById('tabChatGrupal').classList.toggle('active', tab === 'grupal');
-            document.getElementById('tabChatPrivado').classList.toggle('active', tab === 'privado');
-            
-            // También actualizar tabs del modal móvil
-            var grupalMobile = document.getElementById('tabChatGrupalMobile');
-            var privadoMobile = document.getElementById('tabChatPrivadoMobile');
-            if (grupalMobile) grupalMobile.classList.toggle('active', tab === 'grupal');
-            if (privadoMobile) privadoMobile.classList.toggle('active', tab === 'privado');
-            
-            // Mostrar/ocultar lista de usuarios según tab
-            var onlineList = document.getElementById('onlineUsersList');
-            var onlineListMobile = document.getElementById('onlineUsersListMobile');
-            
-            if (tab === 'privado') {
-                if (onlineList) onlineList.style.display = 'block';
-                if (onlineListMobile) onlineListMobile.style.display = 'block';
-            } else {
-                selectedPrivateUser = null;
-                if (onlineList) onlineList.style.display = 'block';
-                if (onlineListMobile) onlineListMobile.style.display = 'block';
-            }
-            
-            renderChatMessages();
-        }
-
-        function renderOnlineUsers() {
-            var container = document.getElementById('onlineUsersContainer');
-            var containerMobile = document.getElementById('onlineUsersContainerMobile');
-            var countEl = document.getElementById('onlineCount');
-            var countElMobile = document.getElementById('onlineCountMobile');
-            
-            var html = '';
-            var onlineCount = 0;
-            var now = Date.now();
-            
-            // Ordenar usuarios: en línea primero, luego por nombre
-            var usersArray = Object.values(onlineUsers).sort(function(a, b) {
-                if (a.online && !b.online) return -1;
-                if (!a.online && b.online) return 1;
-                return a.username.localeCompare(b.username);
-            });
-            
-            for (var i = 0; i < usersArray.length; i++) {
-                var user = usersArray[i];
-                if (user.username === currentAgent) continue; // No mostrarme a mí mismo
-                
-                // Considerar en línea si fue visto en los últimos 60 segundos
-                var isOnline = user.online && (now - user.lastSeen) < 60000;
-                if (isOnline) onlineCount++;
-                
-                var oficinaNombre = '';
-                if (user.oficina && OFICINAS[user.oficina]) {
-                    oficinaNombre = OFICINAS[user.oficina].icono + ' ' + OFICINAS[user.oficina].nombre;
-                }
-                
-                var selectedClass = (selectedPrivateUser === user.username) ? 'selected' : '';
-                
-                html += '<div class="online-user ' + selectedClass + '" onclick="selectPrivateUser(\'' + user.username + '\')">';
-                html += '<span class="online-indicator ' + (isOnline ? '' : 'offline') + '"></span>';
-                html += '<div style="flex: 1;">';
-                html += '<div class="online-user-name">' + user.username + '</div>';
-                if (oficinaNombre) {
-                    html += '<div class="online-user-office">' + oficinaNombre + '</div>';
-                }
-                html += '</div>';
-                html += '</div>';
-            }
-            
-            if (html === '') {
-                html = '<p style="color: #999; font-size: 0.85em; text-align: center;">No hay otros agentes</p>';
-            }
-            
-            if (container) container.innerHTML = html;
-            if (containerMobile) containerMobile.innerHTML = html;
-            if (countEl) countEl.textContent = onlineCount;
-            if (countElMobile) countElMobile.textContent = onlineCount;
-        }
-
-        function selectPrivateUser(username) {
-            selectedPrivateUser = username;
-            currentChatTab = 'privado';
-            
-            // Actualizar UI
-            document.getElementById('tabChatGrupal').classList.remove('active');
-            document.getElementById('tabChatPrivado').classList.add('active');
-            
-            var grupalMobile = document.getElementById('tabChatGrupalMobile');
-            var privadoMobile = document.getElementById('tabChatPrivadoMobile');
-            if (grupalMobile) grupalMobile.classList.remove('active');
-            if (privadoMobile) privadoMobile.classList.add('active');
-            
-            renderOnlineUsers();
-            renderChatMessages();
-            
-            // Marcar mensajes como leídos
-            markPrivateMessagesAsRead(username);
-        }
-
-        function getPrivateChatKey(user1, user2) {
-            var users = [user1, user2].sort();
-            return sanitizeKey(users[0]) + '_' + sanitizeKey(users[1]);
-        }
-
-        function renderChatMessages() {
-            var container = document.getElementById('chatMessages');
-            var containerMobile = document.getElementById('chatMessagesMobile');
-            var html = '';
-            
-            if (currentChatTab === 'grupal') {
-                // Chat grupal
-                if (chatMessages.length === 0) {
-                    html = '<p style="color: #999; text-align: center; font-size: 0.9em;">No hay mensajes aún.<br>¡Sé el primero en saludar! 👋</p>';
-                } else {
-                    for (var i = 0; i < chatMessages.length; i++) {
-                        var msg = chatMessages[i];
-                        html += renderSingleMessage(msg);
-                    }
-                }
-            } else {
-                // Chat privado
-                if (!selectedPrivateUser) {
-                    html = '<p style="color: #999; text-align: center; font-size: 0.9em;">Selecciona un agente para chatear</p>';
-                } else {
-                    var chatKey = getPrivateChatKey(currentAgent, selectedPrivateUser);
-                    var messages = [];
-                    
-                    if (privateChats[chatKey]) {
-                        messages = Object.values(privateChats[chatKey]).sort(function(a, b) {
-                            return a.timestamp - b.timestamp;
-                        });
-                    }
-                    
-                    if (messages.length === 0) {
-                        html = '<p style="color: #999; text-align: center; font-size: 0.9em;">Inicia una conversación con ' + selectedPrivateUser + '</p>';
-                    } else {
-                        for (var j = 0; j < messages.length; j++) {
-                            html += renderSingleMessage(messages[j]);
-                        }
-                    }
-                }
-            }
-            
-            if (container) {
-                container.innerHTML = html;
-                container.scrollTop = container.scrollHeight;
-            }
-            if (containerMobile) {
-                containerMobile.innerHTML = html;
-                containerMobile.scrollTop = containerMobile.scrollHeight;
-            }
-        }
-
-        function renderSingleMessage(msg) {
-            var isSent = msg.from === currentAgent;
-            var time = new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            var date = new Date(msg.timestamp).toLocaleDateString('es-ES');
-            var today = new Date().toLocaleDateString('es-ES');
-            var timeDisplay = (date === today) ? time : date + ' ' + time;
-            
-            var html = '<div class="chat-message ' + (isSent ? 'sent' : 'received') + '">';
-            if (!isSent) {
-                html += '<div class="chat-message-sender">' + msg.from + '</div>';
-            }
-            html += '<div class="chat-message-bubble">' + escapeHtml(msg.text) + '</div>';
-            html += '<div class="chat-message-time">' + timeDisplay + '</div>';
-            html += '</div>';
-            
-            return html;
-        }
-
-        function escapeHtml(text) {
-            var div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function sendChatMessage() {
-            var input = document.getElementById('chatInput');
-            var inputMobile = document.getElementById('chatInputMobile');
-            var text = (input && input.value.trim()) || (inputMobile && inputMobile.value.trim());
-            
-            if (!text || !currentAgent) return;
-            
-            var message = {
-                id: Date.now().toString(),
-                from: currentAgent,
-                text: text,
-                timestamp: Date.now()
-            };
-            
-            if (currentChatTab === 'grupal') {
-                // Enviar al chat grupal
-                db.ref('chatGrupal/' + message.id).set(message);
-            } else if (selectedPrivateUser) {
-                // Enviar al chat privado
-                var chatKey = getPrivateChatKey(currentAgent, selectedPrivateUser);
-                message.to = selectedPrivateUser;
-                message.read = false;
-                db.ref('privateChats/' + chatKey + '/' + message.id).set(message);
-            }
-            
-            // Limpiar inputs
-            if (input) input.value = '';
-            if (inputMobile) inputMobile.value = '';
-        }
-
-        function markPrivateMessagesAsRead(otherUser) {
-            if (!db || !currentAgent) return;
-            
-            var chatKey = getPrivateChatKey(currentAgent, otherUser);
-            if (privateChats[chatKey]) {
-                var messages = Object.values(privateChats[chatKey]);
-                for (var i = 0; i < messages.length; i++) {
-                    var msg = messages[i];
-                    if (msg.to === currentAgent && !msg.read) {
-                        db.ref('privateChats/' + chatKey + '/' + msg.id + '/read').set(true);
-                    }
-                }
-            }
-        }
-
-        function updateChatUnreadCount() {
-            if (!currentAgent) return;
-            
-            var unread = 0;
-            
-            // Contar mensajes privados no leídos
-            for (var chatKey in privateChats) {
-                var messages = Object.values(privateChats[chatKey]);
-                for (var i = 0; i < messages.length; i++) {
-                    var msg = messages[i];
-                    if (msg.to === currentAgent && !msg.read) {
-                        unread++;
-                    }
-                }
-            }
-            
-            chatUnreadCount = unread;
-            
-            var badge = document.getElementById('chatUnreadCount');
-            if (badge) {
-                if (unread > 0) {
-                    badge.textContent = unread > 99 ? '99+' : unread;
-                    badge.style.display = 'flex';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
-        }
-
-        function toggleChatModal() {
-            var modal = document.getElementById('chatModal');
-            if (modal) {
-                modal.classList.toggle('show');
-                if (modal.classList.contains('show')) {
-                    renderChatMessages();
-                    renderOnlineUsers();
-                }
-            }
         }
 
         // ============ SOPORTE TÉCNICO ============
