@@ -200,13 +200,93 @@
         .clients-list { margin-top: 30px; }
         .client-card {
             background: #f8f9fa;
-            padding: 20px;
+            padding: 15px;
             border-radius: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             border-left: 4px solid #d2a94d;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s;
         }
-        .client-card:hover { transform: translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .client-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .client-card-compact {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+        .client-photo {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d2a94d, #b6802d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            flex-shrink: 0;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+        .client-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .client-photo-edit {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #17a2b8;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6em;
+            border: 2px solid white;
+        }
+        .client-compact-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .client-compact-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .client-name { 
+            font-size: 1.1em; 
+            font-weight: 700; 
+            color: #333; 
+            cursor: pointer;
+        }
+        .client-name:hover { color: #b6802d; }
+        .client-compact-stage {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 3px;
+        }
+        .client-expand-icon {
+            font-size: 1.2em;
+            color: #999;
+            transition: transform 0.3s;
+        }
+        .client-card.expanded .client-expand-icon {
+            transform: rotate(180deg);
+        }
+        .client-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .client-card.expanded .client-details {
+            display: block;
+        }
         .client-header {
             display: flex;
             justify-content: space-between;
@@ -215,13 +295,12 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        .client-name { font-size: 1.2em; font-weight: 700; color: #333; }
-        .client-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .client-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .btn-small {
-            padding: 8px 15px;
+            padding: 8px 12px;
             border: none;
             border-radius: 5px;
-            font-size: 0.9em;
+            font-size: 0.85em;
             cursor: pointer;
             font-weight: 600;
         }
@@ -1953,6 +2032,65 @@
             }
         }
 
+        function toggleClientDetails(index) {
+            var card = document.getElementById('client-card-' + index);
+            if (card) {
+                card.classList.toggle('expanded');
+            }
+        }
+
+        function uploadClientPhoto(index) {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    // Validar tamaño (máximo 500KB)
+                    if (file.size > 500000) {
+                        alert('La imagen es muy grande. Máximo 500KB.');
+                        return;
+                    }
+                    var reader = new FileReader();
+                    reader.onload = function(event) {
+                        // Comprimir imagen
+                        var img = new Image();
+                        img.onload = function() {
+                            var canvas = document.createElement('canvas');
+                            var maxSize = 100;
+                            var width = img.width;
+                            var height = img.height;
+                            
+                            if (width > height) {
+                                if (width > maxSize) {
+                                    height *= maxSize / width;
+                                    width = maxSize;
+                                }
+                            } else {
+                                if (height > maxSize) {
+                                    width *= maxSize / height;
+                                    height = maxSize;
+                                }
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            var ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            var compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                            clients[index].foto = compressedData;
+                            saveToFirebase();
+                            displayClients();
+                        };
+                        img.src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+
         function displayClients() {
             var list = document.getElementById('clientsList');
             list.innerHTML = '';
@@ -1994,41 +2132,51 @@
                 var stage = getClientStage(client);
                 var card = document.createElement('div');
                 card.className = 'client-card';
+                card.id = 'client-card-' + index;
                 
-                var linkHTML = client.linkPropiedad ? '<div class="info-item" style="grid-column: 1 / -1;"><span class="info-label">Link:</span> <a href="' + client.linkPropiedad + '" target="_blank" style="color: #b6802d;">' + client.linkPropiedad + '</a></div>' : '';
-                var tipoText = client.tipoOperacion === 'venta' ? ' Venta' : ' Alquiler';
+                var tipoText = client.tipoOperacion === 'venta' ? 'Venta' : 'Alquiler';
                 var tipoClass = client.tipoOperacion === 'venta' ? 'type-venta' : 'type-alquiler';
                 var fechaFormateada = new Date(client.ultimoContacto).toLocaleDateString('es-ES');
-                var ventaHTML = '';
-                if (client.venta) {
-                    var tipoOp = client.tipoOperacion === 'venta' ? 'VENDIDA' : 'ALQUILADA';
-                    var tipoPers = client.tipoOperacion === 'venta' ? 'Comprador' : 'Inquilino';
-                    var monedaSymbol = 'US$'; // Default
-                    if (client.venta.moneda === 'UYU') monedaSymbol = '$';
-                    else if (client.venta.moneda === 'EUR') monedaSymbol = '€';
-                    else if (client.venta.moneda === 'USD') monedaSymbol = 'US$';
-                    var monedaFlag = client.venta.moneda === 'UYU' ? '🇺🇾' : (client.venta.moneda === 'EUR' ? '🇪🇺' : '🇺🇸');
-                    ventaHTML = '<div style="margin-top: 10px; padding: 10px; background: #c8e6c9; border-radius: 5px; color: #2e7d32;"><strong>' + tipoOp + '</strong> ' + monedaFlag + ' ' + monedaSymbol + ' ' + client.venta.precio + ' - ' + tipoPers + ': ' + client.venta.nombreComprador + '</div>';
-                }
-                var agentBadge = (isAdmin && filter === 'all') ? '<span class="agent-badge">' + (client.agente || 'Sin agente') + '</span>' : '';
                 
-                var notaHTML = '';
-                if (client.nota) {
-                    var notaCorta = client.nota.length > 100;
-                    notaHTML = '<div class="note-container"><strong>📝 Nota:</strong> <span id="note-' + index + '" class="note-text">' + client.nota + '</span>' + (notaCorta ? '<br><button class="ver-mas-btn" id="btn-note-' + index + '" onclick="toggleNote(' + index + ')">Ver más...</button>' : '') + '</div>';
-                }
-
-                var actionsHTML = '';
-                if (showingArchived) {
-                    actionsHTML = '<button class="btn-small btn-restore" onclick="restaurarCliente(' + index + ')">♻️ Restaurar</button><button class="btn-small btn-delete" onclick="deleteClient(' + index + ')">Eliminar</button>';
-                } else {
-                    actionsHTML = '<button class="btn-small btn-call" onclick="openCallModal(' + index + ')">+Llamada</button><button class="btn-small btn-follow" onclick="openFollowUp(' + index + ')">Seguimiento</button><button class="btn-small btn-edit" onclick="editClient(' + index + ')">Editar</button><button class="btn-small btn-delete" onclick="deleteClient(' + index + ')">Borrar</button>';
+                // Iniciales para la foto
+                var initials = client.nombre.split(' ').map(function(n) { return n[0]; }).join('').substring(0, 2).toUpperCase();
+                var photoHTML = client.foto 
+                    ? '<img src="' + client.foto + '" alt="Foto">' 
+                    : initials;
+                
+                // Nota de seguimiento compacta
+                var seguimientoNote = '';
+                if (stage.badge === 'Hacer Seguimiento' || stage.badge === 'Llamar de Nuevo' || stage.badge === 'Seguir o Archivar') {
+                    seguimientoNote = '<div style="font-size: 0.8em; color: #e65100; margin-top: 3px;">⚠️ ' + stage.badge + '</div>';
                 }
                 
-                // Botones de contacto - WhatsApp internacional
+                // Badge del agente (solo admin)
+                var agentBadge = (isAdmin && filter === 'all') ? '<span class="agent-badge" style="font-size: 0.75em;">' + (client.agente || 'Sin agente') + '</span>' : '';
+                
+                // Sección compacta (siempre visible)
+                var compactHTML = '<div class="client-card-compact" onclick="toggleClientDetails(' + index + ')">';
+                compactHTML += '<div class="client-photo" onclick="event.stopPropagation(); uploadClientPhoto(' + index + ')">' + photoHTML + '<span class="client-photo-edit">📷</span></div>';
+                compactHTML += '<div class="client-compact-info">';
+                compactHTML += '<div class="client-compact-header"><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div>';
+                compactHTML += '<div class="client-compact-stage"><span class="stage-badge ' + stage.class + '" style="padding: 2px 8px; font-size: 0.75em;">' + stage.badge + '</span></div>';
+                compactHTML += seguimientoNote;
+                compactHTML += '</div>';
+                compactHTML += '<span class="client-expand-icon">▼</span>';
+                compactHTML += '</div>';
+                
+                // Sección de detalles (oculta por defecto)
+                var detailsHTML = '<div class="client-details" id="client-details-' + index + '">';
+                
+                // Info del cliente
+                detailsHTML += '<div class="client-info">';
+                detailsHTML += '<div class="info-item"><span class="info-label">📞 Teléfono:</span> ' + client.telefono + '</div>';
+                detailsHTML += '<div class="info-item"><span class="info-label">📍 Dirección:</span> ' + (client.direccion || 'N/A') + '</div>';
+                detailsHTML += '<div class="info-item"><span class="info-label">📊 Llamadas:</span> ' + client.cantidadLlamadas + '</div>';
+                detailsHTML += '<div class="info-item"><span class="info-label">📅 Último contacto:</span> ' + fechaFormateada + '</div>';
+                detailsHTML += '</div>';
+                
+                // Botones de contacto
                 var phoneClean = client.telefono.replace(/\D/g, '');
-                // Si el número ya tiene código de país (empieza con + o tiene más de 10 dígitos), usarlo directamente
-                // Si no, asumir Uruguay (598)
                 var whatsappNumber = phoneClean;
                 if (phoneClean.length <= 9) {
                     whatsappNumber = '598' + phoneClean;
@@ -2036,18 +2184,49 @@
                     whatsappNumber = '598' + phoneClean.substring(1);
                 }
                 
-                var contactButtonsHTML = '<div class="contact-buttons">';
-                contactButtonsHTML += '<a href="tel:' + client.telefono + '" class="contact-btn btn-call-phone">📞 Llamar</a>';
-                contactButtonsHTML += '<a href="https://wa.me/' + whatsappNumber + '" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>';
+                detailsHTML += '<div class="contact-buttons" style="margin-top: 10px;">';
+                detailsHTML += '<a href="tel:' + client.telefono + '" class="contact-btn btn-call-phone">📞 Llamar</a>';
+                detailsHTML += '<a href="https://wa.me/' + whatsappNumber + '" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>';
                 if (client.direccion) {
-                    contactButtonsHTML += '<a href="https://www.google.com/maps/search/' + encodeURIComponent(client.direccion) + '" target="_blank" class="contact-btn btn-maps">📍 Mapa</a>';
+                    detailsHTML += '<a href="https://www.google.com/maps/search/' + encodeURIComponent(client.direccion) + '" target="_blank" class="contact-btn btn-maps">📍 Mapa</a>';
                 }
                 if (client.linkPropiedad) {
-                    contactButtonsHTML += '<a href="' + client.linkPropiedad + '" target="_blank" class="contact-btn btn-link">🔗 Ver Propiedad</a>';
+                    detailsHTML += '<a href="' + client.linkPropiedad + '" target="_blank" class="contact-btn btn-link">🔗 Ver Propiedad</a>';
                 }
-                contactButtonsHTML += '</div>';
+                detailsHTML += '</div>';
                 
-                card.innerHTML = '<div class="client-header"><div><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div><div class="client-actions">' + actionsHTML + '</div></div><div class="client-info"><div class="info-item"><span class="info-label">Teléfono:</span> ' + client.telefono + '</div><div class="info-item"><span class="info-label">Dirección:</span> ' + (client.direccion || 'N/A') + '</div><div class="info-item"><span class="info-label">Llamadas:</span> ' + client.cantidadLlamadas + '</div><div class="info-item"><span class="info-label">Último contacto:</span> ' + fechaFormateada + '</div></div>' + contactButtonsHTML + '<span class="stage-badge ' + stage.class + '">' + stage.badge + '</span>' + notaHTML + ventaHTML;
+                // Botones de acción
+                detailsHTML += '<div class="client-actions" style="margin-top: 10px;">';
+                if (showingArchived) {
+                    detailsHTML += '<button class="btn-small btn-restore" onclick="event.stopPropagation(); restaurarCliente(' + index + ')">♻️ Restaurar</button>';
+                    detailsHTML += '<button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteClient(' + index + ')">🗑️ Eliminar</button>';
+                } else {
+                    detailsHTML += '<button class="btn-small btn-call" onclick="event.stopPropagation(); openCallModal(' + index + ')">📞 +Llamada</button>';
+                    detailsHTML += '<button class="btn-small btn-follow" onclick="event.stopPropagation(); openFollowUp(' + index + ')">📋 Seguimiento</button>';
+                    detailsHTML += '<button class="btn-small btn-edit" onclick="event.stopPropagation(); editClient(' + index + ')">✏️ Editar</button>';
+                    detailsHTML += '<button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteClient(' + index + ')">🗑️ Borrar</button>';
+                }
+                detailsHTML += '</div>';
+                
+                // Nota
+                if (client.nota) {
+                    detailsHTML += '<div class="note-container" style="margin-top: 10px;"><strong>📝 Nota:</strong> ' + client.nota + '</div>';
+                }
+                
+                // Info de venta/alquiler
+                if (client.venta) {
+                    var tipoOp = client.tipoOperacion === 'venta' ? 'VENDIDA' : 'ALQUILADA';
+                    var tipoPers = client.tipoOperacion === 'venta' ? 'Comprador' : 'Inquilino';
+                    var monedaSymbol = 'US$';
+                    if (client.venta.moneda === 'UYU') monedaSymbol = '$';
+                    else if (client.venta.moneda === 'EUR') monedaSymbol = '€';
+                    var monedaFlag = client.venta.moneda === 'UYU' ? '🇺🇾' : (client.venta.moneda === 'EUR' ? '🇪🇺' : '🇺🇸');
+                    detailsHTML += '<div style="margin-top: 10px; padding: 10px; background: #c8e6c9; border-radius: 5px; color: #2e7d32;"><strong>' + tipoOp + '</strong> ' + monedaFlag + ' ' + monedaSymbol + ' ' + client.venta.precio + ' - ' + tipoPers + ': ' + client.venta.nombreComprador + '</div>';
+                }
+                
+                detailsHTML += '</div>';
+                
+                card.innerHTML = compactHTML + detailsHTML;
                 list.appendChild(card);
             }
             
