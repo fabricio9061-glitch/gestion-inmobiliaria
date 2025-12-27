@@ -122,10 +122,9 @@
         .dropdown-item.danger { color: #dc3545; }
         .dropdown-item.danger:hover { background: #f8d7da; }
         .dropdown-item i { margin-right: 10px; }
-        .content { display: grid; grid-template-columns: 1fr 350px 300px; gap: 0; }
+        .content { display: grid; grid-template-columns: 1fr 380px; gap: 0; }
         .form-section { padding: 30px; border-right: 2px solid #e0e0e0; }
-        .stats-section { padding: 30px; background: #f8f9fa; border-right: 2px solid #e0e0e0; }
-        .chat-section { padding: 20px; background: #fff; display: flex; flex-direction: column; height: calc(100vh - 120px); }
+        .stats-section { padding: 30px; background: #f8f9fa; }
         .chat-header { margin-bottom: 15px; }
         .chat-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
         .chat-tab { 
@@ -817,17 +816,10 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-text { margin-top: 15px; color: #666; font-weight: 600; }
-        @media (max-width: 1400px) {
-            .content { grid-template-columns: 1fr 320px; }
-            .chat-section { display: none; }
-            .chat-float-btn { display: flex !important; }
-        }
         @media (max-width: 1024px) {
             .content { grid-template-columns: 1fr; }
             .form-section { border-right: none; border-bottom: 2px solid #e0e0e0; }
-            .stats-section { border-right: none; }
             .agent-info { position: static; margin-bottom: 15px; text-align: center; }
-            .chat-section { display: none; }
         }
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -857,7 +849,7 @@
             height: 55px;
             background: linear-gradient(135deg, #d2a94d, #b6802d);
             border-radius: 50%;
-            display: none;
+            display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -865,6 +857,9 @@
             z-index: 999;
             font-size: 1.4em;
             color: white;
+        }
+        .chat-float-btn:hover {
+            transform: scale(1.1);
         }
         .chat-float-btn .unread-count {
             position: absolute;
@@ -1134,39 +1129,43 @@
             <div id="loginForm" class="login-form active">
                 <div class="form-group">
                     <label for="loginUsername">Usuario</label>
-                    <input type="text" id="loginUsername" placeholder="Tu nombre de usuario...">
+                    <input type="text" id="loginUsername" placeholder="Nombre Apellido...">
                 </div>
                 <div class="form-group">
-                    <label for="loginPassword">Contrasena</label>
-                    <input type="password" id="loginPassword" placeholder="Tu contrasena...">
+                    <label for="loginPassword">Contraseña</label>
+                    <input type="password" id="loginPassword" placeholder="Tu número de teléfono...">
                 </div>
                 <button class="btn btn-primary" onclick="login()">Iniciar Sesion</button>
             </div>
 
             <!-- Register Form -->
             <div id="registerForm" class="login-form">
-                <div class="form-group">
-                    <label for="regUsername">Nombre Completo</label>
-                    <input type="text" id="regUsername" placeholder="Ej: Juan Perez...">
+                <div style="display: flex; gap: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="regNombre">Nombre *</label>
+                        <input type="text" id="regNombre" placeholder="Ej: Juan">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="regApellido">Apellido *</label>
+                        <input type="text" id="regApellido" placeholder="Ej: Perez">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label for="regCedula">Cédula de Identidad</label>
+                    <label for="regCedula">Cédula de Identidad *</label>
                     <input type="text" id="regCedula" placeholder="Ej: 12345678...">
+                    <small style="color: #666; font-size: 0.8em;">No podrás crear otra cuenta con esta cédula</small>
                 </div>
                 <div class="form-group">
-                    <label for="regOficina">Oficina</label>
+                    <label for="regTelefono">Teléfono (Contraseña) *</label>
+                    <input type="tel" id="regTelefono" placeholder="Ej: 094000000...">
+                    <small style="color: #666; font-size: 0.8em;">Este número será tu contraseña para ingresar</small>
+                </div>
+                <div class="form-group">
+                    <label for="regOficina">Oficina *</label>
                     <select id="regOficina" required>
                         <option value="">Seleccionar oficina...</option>
                         <option value="imperium_harmony">🏢 Imperium Harmony</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label for="regPassword">Contrasena</label>
-                    <input type="password" id="regPassword" placeholder="Crea una contrasena...">
-                </div>
-                <div class="form-group">
-                    <label for="regPasswordConfirm">Confirmar Contrasena</label>
-                    <input type="password" id="regPasswordConfirm" placeholder="Confirma tu contrasena...">
                 </div>
                 <button class="btn btn-success" onclick="register()">Registrarse</button>
             </div>
@@ -1449,48 +1448,17 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Chat Section -->
-                <div class="chat-section" id="chatSection">
-                    <div class="chat-header">
-                        <h3 style="margin: 0; color: #333; font-size: 1.1em;">💬 Chat de Agentes</h3>
-                    </div>
-                    
-                    <div class="chat-tabs">
-                        <button class="chat-tab active" id="tabChatGrupal" onclick="switchChatTab('grupal')">👥 Grupal</button>
-                        <button class="chat-tab" id="tabChatPrivado" onclick="switchChatTab('privado')">👤 Privado</button>
-                    </div>
-                    
-                    <!-- Usuarios en línea -->
-                    <div class="online-users" id="onlineUsersList">
-                        <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
-                            <span id="onlineCount">0</span> en línea
-                        </div>
-                        <div id="onlineUsersContainer"></div>
-                    </div>
-                    
-                    <!-- Área de mensajes -->
-                    <div class="chat-messages" id="chatMessages">
-                        <p style="color: #999; text-align: center; font-size: 0.9em;">Cargando mensajes...</p>
-                    </div>
-                    
-                    <!-- Input de mensaje -->
-                    <div class="chat-input-container">
-                        <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
-                        <button onclick="sendChatMessage()">➤</button>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
-    <!-- Botón flotante de chat (para móviles) -->
-    <div class="chat-float-btn" id="chatFloatBtn" onclick="toggleChatModal()">
+    <!-- Botón flotante de chat -->
+    <div class="chat-float-btn" id="chatFloatBtn" onclick="toggleChatModal()" style="display: none;">
         💬
         <span class="unread-count" id="chatUnreadCount" style="display: none;">0</span>
     </div>
 
-    <!-- Modal de chat para móviles -->
+    <!-- Modal de chat -->
     <div class="chat-modal" id="chatModal">
         <div style="background: linear-gradient(135deg, #d2a94d, #b6802d); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
             <h4 style="margin: 0;">💬 Chat de Agentes</h4>
@@ -1498,21 +1466,22 @@
         </div>
         <div style="padding: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
             <div class="chat-tabs" style="margin-bottom: 10px;">
-                <button class="chat-tab active" id="tabChatGrupalMobile" onclick="switchChatTab('grupal')">👥 Grupal</button>
-                <button class="chat-tab" id="tabChatPrivadoMobile" onclick="switchChatTab('privado')">👤 Privado</button>
+                <button class="chat-tab active" id="tabChatGrupal" onclick="switchChatTab('grupal')">👥 Grupal</button>
+                <button class="chat-tab" id="tabChatPrivado" onclick="switchChatTab('privado')">👤 Privado</button>
             </div>
-            <div class="online-users" id="onlineUsersListMobile" style="max-height: 100px;">
+            <div class="online-users" id="onlineUsersList" style="max-height: 120px;">
                 <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
-                    <span id="onlineCountMobile">0</span> en línea
+                    <span id="onlineCount">0</span> en línea
                 </div>
-                <div id="onlineUsersContainerMobile"></div>
+                <div id="onlineUsersContainer"></div>
             </div>
-            <div class="chat-messages" id="chatMessagesMobile" style="flex: 1; min-height: 150px;"></div>
+            <div class="chat-messages" id="chatMessages" style="flex: 1; min-height: 200px;"></div>
             <div class="chat-input-container">
-                <input type="text" id="chatInputMobile" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
                 <button onclick="sendChatMessage()">➤</button>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Modal de Seguimiento -->
@@ -2037,8 +2006,19 @@
             var session = localStorage.getItem(SESSION_KEY);
             if (session) {
                 var sessionData = JSON.parse(session);
-                var user = findUser(sessionData.username);
-                if (user && user.password === sessionData.password) {
+                var user = null;
+                
+                // Buscar por teléfono (nuevo sistema) o por username/password (compatibilidad)
+                if (sessionData.telefono) {
+                    user = findUserByTelefono(sessionData.telefono);
+                } else if (sessionData.username) {
+                    user = findUser(sessionData.username);
+                    if (user && user.password !== sessionData.password) {
+                        user = null;
+                    }
+                }
+                
+                if (user) {
                     // Actualizar ultima sesion
                     user.lastLogin = new Date().toISOString();
                     saveUsersToFirebase();
@@ -2093,52 +2073,71 @@
 
         function register() {
             hideMessages();
-            var username = document.getElementById('regUsername').value.trim();
+            var nombre = document.getElementById('regNombre').value.trim();
+            var apellido = document.getElementById('regApellido').value.trim();
             var cedula = document.getElementById('regCedula').value.trim();
+            var telefono = document.getElementById('regTelefono').value.trim().replace(/\s/g, '');
             var oficina = document.getElementById('regOficina').value;
-            var password = document.getElementById('regPassword').value;
-            var passwordConfirm = document.getElementById('regPasswordConfirm').value;
 
-            if (!username || !cedula || !oficina || !password) { showError('Completa todos los campos'); return; }
-            if (password !== passwordConfirm) { showError('Las contrasenas no coinciden'); return; }
-            if (password.length < 4) { showError('Contrasena minimo 4 caracteres'); return; }
-            if (cedula.length < 6) { showError('Cedula invalida'); return; }
+            if (!nombre || !apellido || !cedula || !telefono || !oficina) { showError('Completa todos los campos'); return; }
+            if (cedula.length < 6) { showError('Cédula inválida (mínimo 6 dígitos)'); return; }
+            if (telefono.length < 8) { showError('Teléfono inválido (mínimo 8 dígitos)'); return; }
+            
+            // Crear username: Nombre Apellido (capitalizado)
+            var username = capitalizeWords(nombre) + ' ' + capitalizeWords(apellido);
             
             // Verificar si la cédula ya existe
             for (var i = 0; i < users.length; i++) {
                 if (users[i].cedula === cedula) {
-                    showError('Esta cedula ya esta registrada'); return;
+                    showError('Esta cédula ya está registrada. No puedes crear otra cuenta.'); return;
                 }
             }
             
-            if (findUser(username)) { showError('Este usuario ya existe'); return; }
+            // Verificar si el usuario ya existe
+            if (findUser(username)) {
+                showError('Este nombre de usuario ya existe'); return;
+            }
 
             users.push({ 
                 username: username, 
                 cedula: cedula,
+                telefono: telefono,
                 oficina: oficina,
-                password: password, 
+                password: telefono, // El teléfono es la contraseña
                 role: 'agent',
                 createdAt: new Date().toISOString() 
             });
             saveUsersToFirebase();
-            showSuccess('Registro exitoso! Bienvenido a ' + OFICINAS[oficina].nombre);
-            document.getElementById('regUsername').value = '';
+            showSuccess('¡Registro exitoso! Usuario: ' + username);
+            document.getElementById('regNombre').value = '';
+            document.getElementById('regApellido').value = '';
             document.getElementById('regCedula').value = '';
+            document.getElementById('regTelefono').value = '';
             document.getElementById('regOficina').value = '';
-            document.getElementById('regPassword').value = '';
-            document.getElementById('regPasswordConfirm').value = '';
-            setTimeout(function() { switchLoginTab('login'); }, 1500);
+            setTimeout(function() { switchLoginTab('login'); }, 2000);
+        }
+        
+        function capitalizeWords(str) {
+            return str.toLowerCase().replace(/\b\w/g, function(char) {
+                return char.toUpperCase();
+            });
         }
 
         function login() {
             hideMessages();
             var username = document.getElementById('loginUsername').value.trim();
-            var password = document.getElementById('loginPassword').value;
+            var password = document.getElementById('loginPassword').value.trim().replace(/\s/g, '');
 
             if (!username || !password) { showError('Completa todos los campos'); return; }
+            
+            // Buscar usuario por nombre
             var user = findUser(username);
-            if (!user || user.password !== password) { showError('Usuario o contrasena incorrectos'); return; }
+            if (!user) { showError('Usuario no encontrado'); return; }
+            
+            // Verificar contraseña (teléfono)
+            if (user.password !== password && user.telefono !== password) {
+                showError('Contraseña incorrecta'); return;
+            }
 
             // Guardar ultima sesion
             user.lastLogin = new Date().toISOString();
@@ -2150,6 +2149,15 @@
             localStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username, password: user.password }));
             showMainApp();
         }
+        
+        function findUserByTelefono(telefono) {
+            for (var i = 0; i < users.length; i++) {
+                if (users[i].telefono === telefono || users[i].password === telefono) {
+                    return users[i];
+                }
+            }
+            return null;
+        }
 
         function logout() {
             closeMenu();
@@ -2160,6 +2168,10 @@
                 clearInterval(presenceInterval);
                 presenceInterval = null;
             }
+            
+            // Ocultar chat
+            document.getElementById('chatFloatBtn').style.display = 'none';
+            document.getElementById('chatModal').classList.remove('show');
             
             localStorage.removeItem(SESSION_KEY);
             currentAgent = '';
@@ -2234,6 +2246,9 @@
             // Mostrar/ocultar burbuja de soporte y buzón
             document.getElementById('supportBubble').style.display = isSupport ? 'none' : 'flex';
             document.getElementById('supportInboxBtn').style.display = isSupport ? 'flex' : 'none';
+            
+            // Mostrar botón de chat
+            document.getElementById('chatFloatBtn').style.display = 'flex';
             
             // Inicializar chat
             setUserPresence(true);
