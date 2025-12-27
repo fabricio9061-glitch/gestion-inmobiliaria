@@ -1785,7 +1785,8 @@
                 } else {
                     clients = [];
                 }
-                if (currentAgent) {
+                // Actualizar vista si la app principal está visible
+                if (currentAgent && document.getElementById('mainApp').style.display !== 'none') {
                     displayClients();
                     updateArchivedCount();
                     updateStats();
@@ -2262,6 +2263,13 @@
             populateMonthSelector();
             if (isAdmin) populateAgentSelector();
             if (isSupport) updateSupportBadge();
+            
+            // Forzar actualización después de que Firebase termine de cargar
+            setTimeout(function() {
+                displayClients();
+                updateStats();
+                updateArchivedCount();
+            }, 500);
         }
 
         // ============ CLIENT FORM ============
