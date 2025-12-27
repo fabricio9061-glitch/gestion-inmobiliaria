@@ -840,6 +840,101 @@
             .top-agent { flex-wrap: wrap; }
             .top-score { width: 100%; text-align: right; margin-top: 5px; }
         }
+        /* Soporte Técnico */
+        .support-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            font-size: 1.5em;
+            transition: transform 0.2s;
+        }
+        .support-bubble:hover { transform: scale(1.1); }
+        .support-inbox-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .support-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 0.75em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .support-chat {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .support-chat.show { display: flex; }
+        .support-chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        .support-message {
+            margin-bottom: 12px;
+            max-width: 85%;
+        }
+        .support-message.sent {
+            margin-left: auto;
+            text-align: right;
+        }
+        .support-message.sent > div:first-child {
+            background: #17a2b8;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px 15px 0 15px;
+            display: inline-block;
+        }
+        .support-message.received > div:first-child {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px 15px 15px 0;
+            display: inline-block;
+            border: 1px solid #e0e0e0;
+        }
+        .support-message-time {
+            font-size: 0.75em;
+            color: #999;
+            margin-top: 3px;
+        }
         /* Botones de contacto */
         .contact-buttons {
             display: flex;
@@ -1264,6 +1359,41 @@
         </div>
     </div>
 
+    <!-- Burbuja de Soporte Técnico (para agentes) -->
+    <div class="support-bubble" id="supportBubble" onclick="toggleSupportChat()">
+        🛟
+    </div>
+
+    <!-- Botón de Inbox de Soporte (para ST) -->
+    <button class="support-inbox-btn" id="supportInboxBtn" onclick="openSupportInbox()" style="display: none;">
+        📬 Inbox
+        <span class="support-badge" id="supportBadge" style="display: none;">0</span>
+    </button>
+
+    <!-- Chat de Soporte (para agentes) -->
+    <div class="support-chat" id="supportChat">
+        <div style="background: linear-gradient(135deg, #17a2b8, #138496); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 15px 15px 0 0;">
+            <span style="font-weight: bold;">🛟 Soporte Técnico</span>
+            <button onclick="toggleSupportChat()" style="background: none; border: none; color: white; font-size: 1.3em; cursor: pointer;">×</button>
+        </div>
+        <div class="support-chat-messages" id="supportChatMessages"></div>
+        <div style="padding: 10px; border-top: 1px solid #eee; display: flex; gap: 8px;">
+            <input type="text" id="supportMessageInput" placeholder="Escribe tu mensaje..." style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; outline: none;" onkeypress="if(event.key==='Enter')sendSupportMessage()">
+            <button onclick="sendSupportMessage()" style="background: #17a2b8; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer;">➤</button>
+        </div>
+    </div>
+
+    <!-- Modal Inbox de Soporte (para ST) -->
+    <div id="supportInboxModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8, #138496); color: white;">
+                <h2>📬 Inbox de Soporte Técnico</h2>
+                <span class="close" onclick="closeSupportInbox()" style="color: white;">&times;</span>
+            </div>
+            <div id="supportInboxList" style="max-height: 500px; overflow-y: auto; padding: 15px;"></div>
+        </div>
+    </div>
+
     <!-- Modal de Seguimiento -->
     <div id="followUpModal" class="modal">
         <div class="modal-content">
@@ -1417,6 +1547,7 @@
         var firebaseInitialized = false;
         var SESSION_KEY = 'inmobiliaria_session';
         var ADMIN_USER = 'Diego Hernandez';
+        var SUPPORT_USER = 'Anibal Malave';
         
         // Configuración de oficinas
         var OFICINAS = {
@@ -1430,10 +1561,12 @@
         
         var clients = [];
         var users = [];
+        var supportMessages = [];
         var editingIndex = -1;
         var currentClientIndex = -1;
         var currentAgent = '';
         var isAdmin = false;
+        var isSupport = false;
         var showingArchived = false;
         var statsFilter = 'all';
         var agentStatsFilter = 'all';
@@ -1532,6 +1665,18 @@
                 } else {
                     users = [];
                 }
+            });
+
+            // Escuchar cambios en mensajes de soporte
+            db.ref('supportMessages').on('value', function(snapshot) {
+                var data = snapshot.val();
+                if (data) {
+                    supportMessages = Object.values(data);
+                } else {
+                    supportMessages = [];
+                }
+                updateSupportBadge();
+                if (isSupport) renderSupportInbox();
             });
 
             // Estado de conexion
@@ -1697,6 +1842,7 @@
                     
                     currentAgent = user.username;
                     isAdmin = (currentAgent === ADMIN_USER);
+                    isSupport = (currentAgent === SUPPORT_USER) || (user.role === 'support');
                     showMainApp();
                     return;
                 }
@@ -1817,6 +1963,7 @@
 
             currentAgent = user.username;
             isAdmin = (currentAgent === ADMIN_USER);
+            isSupport = (currentAgent === SUPPORT_USER) || (user.role === 'support');
             localStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username, password: user.password }));
             showMainApp();
         }
@@ -1836,6 +1983,7 @@
             localStorage.removeItem(SESSION_KEY);
             currentAgent = '';
             isAdmin = false;
+            isSupport = false;
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
             showLoginScreen();
@@ -1878,6 +2026,15 @@
                 document.getElementById('monthlyTitle').textContent = ' Estadísticas Mensuales';
                 document.getElementById('monthlyAgentFilter').style.display = 'block';
                 populateMonthlyAgentSelector();
+            } else if (isSupport) {
+                document.getElementById('adminBadge').style.display = 'inline';
+                document.getElementById('adminBadge').innerHTML = '🛠️ ST';
+                document.getElementById('adminBadge').style.background = '#17a2b8';
+                document.getElementById('tabAgents').style.display = 'none';
+                document.getElementById('filterSection').style.display = 'none';
+                document.getElementById('statsTitle').textContent = ' Mis Estadísticas';
+                document.getElementById('monthlyTitle').textContent = ' Mis Estadísticas Mensuales';
+                document.getElementById('monthlyAgentFilter').style.display = 'none';
             } else {
                 document.getElementById('adminBadge').style.display = 'none';
                 document.getElementById('tabAgents').style.display = 'none';
@@ -1885,6 +2042,17 @@
                 document.getElementById('statsTitle').textContent = ' Mis Estadísticas';
                 document.getElementById('monthlyTitle').textContent = ' Mis Estadísticas Mensuales';
                 document.getElementById('monthlyAgentFilter').style.display = 'none';
+            }
+            
+            // Mostrar/ocultar elementos de soporte según rol
+            if (isSupport) {
+                document.getElementById('supportBubble').style.display = 'none';
+                document.getElementById('supportInboxBtn').style.display = 'block';
+                updateSupportBadge();
+                renderSupportInbox();
+            } else {
+                document.getElementById('supportBubble').style.display = 'flex';
+                document.getElementById('supportInboxBtn').style.display = 'none';
             }
             
             migrateOldData();
