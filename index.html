@@ -707,6 +707,175 @@
             background: linear-gradient(135deg, #9C27B0, #7B1FA2);
             color: white;
         }
+        /* Burbuja de Soporte */
+        .support-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: transform 0.3s;
+            font-size: 1.5em;
+            color: white;
+        }
+        .support-bubble:hover { transform: scale(1.1); }
+        .support-inbox-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            font-size: 1.5em;
+            color: white;
+        }
+        .support-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .support-chat {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            max-height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .support-chat.show { display: flex; }
+        .support-chat-header {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .support-chat-header h4 { margin: 0; }
+        .support-chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .support-chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+            background: #f8f9fa;
+        }
+        .support-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 85%;
+        }
+        .support-message.sent {
+            background: #d2a94d;
+            color: white;
+            margin-left: auto;
+        }
+        .support-message.received {
+            background: white;
+            border: 1px solid #ddd;
+        }
+        .support-message-time {
+            font-size: 0.7em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        .support-chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #eee;
+            gap: 10px;
+        }
+        .support-chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        .support-chat-input button {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        /* Paginación */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            padding: 10px 15px;
+            border: 2px solid #d2a94d;
+            background: white;
+            color: #b6802d;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .pagination button:hover:not(:disabled) {
+            background: #d2a94d;
+            color: white;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination .page-info {
+            font-weight: 600;
+            color: #666;
+        }
+        @media (max-width: 768px) {
+            .support-chat {
+                width: calc(100% - 40px);
+                right: 20px;
+                left: 20px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -747,6 +916,10 @@
                 <div class="form-group">
                     <label for="regUsername">Nombre Completo</label>
                     <input type="text" id="regUsername" placeholder="Ej: Juan Perez...">
+                </div>
+                <div class="form-group">
+                    <label for="regCedula">Cédula de Identidad</label>
+                    <input type="text" id="regCedula" placeholder="Ej: 12345678...">
                 </div>
                 <div class="form-group">
                     <label for="regPassword">Contrasena</label>
@@ -1133,6 +1306,48 @@
         </div>
     </div>
 
+    <!-- Burbuja de Soporte (para agentes) -->
+    <div id="supportBubble" class="support-bubble" onclick="toggleSupportChat()" style="display: none;">
+        🛟
+    </div>
+
+    <!-- Botón Buzón de Soporte (para ST) -->
+    <div id="supportInboxBtn" class="support-inbox-btn" onclick="openSupportInbox()" style="display: none;">
+        📬
+        <span id="supportBadge" class="support-badge" style="display: none;">0</span>
+    </div>
+
+    <!-- Chat de Soporte -->
+    <div id="supportChat" class="support-chat">
+        <div class="support-chat-header">
+            <h4>🛟 Soporte Técnico</h4>
+            <button class="support-chat-close" onclick="toggleSupportChat()">&times;</button>
+        </div>
+        <div class="support-chat-messages" id="supportChatMessages">
+            <div class="support-message received">
+                <div>¡Hola! Soy el soporte técnico. ¿En qué puedo ayudarte?</div>
+                <div class="support-message-time">Sistema</div>
+            </div>
+        </div>
+        <div class="support-chat-input">
+            <input type="text" id="supportMessageInput" placeholder="Escribe tu mensaje..." onkeypress="if(event.key==='Enter')sendSupportMessage()">
+            <button onclick="sendSupportMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Modal Buzón de Soporte (para ST) -->
+    <div id="supportInboxModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>📬 Buzón de Soporte</h2>
+                <span class="close" onclick="closeSupportInbox()">&times;</span>
+            </div>
+            <div id="supportInboxList" style="max-height: 400px; overflow-y: auto;">
+                <p style="color: #666; text-align: center;">No hay mensajes pendientes</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============ FIREBASE CONFIG ============
         // IMPORTANTE: Reemplaza esta configuracion con la tuya de Firebase
@@ -1150,16 +1365,21 @@
         var firebaseInitialized = false;
         var SESSION_KEY = 'inmobiliaria_session';
         var ADMIN_USER = 'Diego Hernandez';
+        var SUPPORT_USER = 'Anibal Malave';
         
         var clients = [];
         var users = [];
+        var supportMessages = [];
         var editingIndex = -1;
         var currentClientIndex = -1;
         var currentAgent = '';
         var isAdmin = false;
+        var isSupport = false;
         var showingArchived = false;
         var statsFilter = 'all';
         var agentStatsFilter = 'all';
+        var currentPage = 1;
+        var clientsPerPage = 5;
 
         // ============ INICIALIZACION ============
         window.onload = function() {
@@ -1251,6 +1471,22 @@
                     users = Object.values(data);
                 } else {
                     users = [];
+                }
+            });
+
+            // Escuchar cambios en mensajes de soporte
+            db.ref('supportMessages').on('value', function(snapshot) {
+                var data = snapshot.val();
+                if (data) {
+                    supportMessages = Object.values(data);
+                } else {
+                    supportMessages = [];
+                }
+                if (currentAgent) {
+                    updateSupportBadge();
+                    if (isSupport) {
+                        renderSupportInbox();
+                    }
                 }
             });
 
@@ -1455,18 +1691,35 @@
         function register() {
             hideMessages();
             var username = document.getElementById('regUsername').value.trim();
+            var cedula = document.getElementById('regCedula').value.trim();
             var password = document.getElementById('regPassword').value;
             var passwordConfirm = document.getElementById('regPasswordConfirm').value;
 
-            if (!username || !password) { showError('Completa todos los campos'); return; }
+            if (!username || !cedula || !password) { showError('Completa todos los campos'); return; }
             if (password !== passwordConfirm) { showError('Las contrasenas no coinciden'); return; }
             if (password.length < 4) { showError('Contrasena minimo 4 caracteres'); return; }
+            if (cedula.length < 6) { showError('Cedula invalida'); return; }
+            
+            // Verificar si la cédula ya existe
+            for (var i = 0; i < users.length; i++) {
+                if (users[i].cedula === cedula) {
+                    showError('Esta cedula ya esta registrada'); return;
+                }
+            }
+            
             if (findUser(username)) { showError('Este usuario ya existe'); return; }
 
-            users.push({ username: username, password: password, createdAt: new Date().toISOString() });
+            users.push({ 
+                username: username, 
+                cedula: cedula,
+                password: password, 
+                role: 'agent',
+                createdAt: new Date().toISOString() 
+            });
             saveUsersToFirebase();
             showSuccess('Registro exitoso! Inicia sesion');
             document.getElementById('regUsername').value = '';
+            document.getElementById('regCedula').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regPasswordConfirm').value = '';
             setTimeout(function() { switchLoginTab('login'); }, 1500);
@@ -1487,6 +1740,7 @@
 
             currentAgent = user.username;
             isAdmin = (currentAgent === ADMIN_USER);
+            isSupport = (currentAgent === SUPPORT_USER) || (user.role === 'support');
             localStorage.setItem(SESSION_KEY, JSON.stringify({ username: user.username, password: user.password }));
             showMainApp();
         }
@@ -1496,6 +1750,7 @@
             localStorage.removeItem(SESSION_KEY);
             currentAgent = '';
             isAdmin = false;
+            isSupport = false;
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
             showLoginScreen();
@@ -1512,14 +1767,31 @@
             document.getElementById('mainApp').style.display = 'block';
             document.getElementById('currentAgentDisplay').textContent = currentAgent;
             
+            // Verificar si es soporte técnico
+            isSupport = (currentAgent === SUPPORT_USER);
+            var currentUserData = findUser(currentAgent);
+            if (currentUserData && currentUserData.role === 'support') {
+                isSupport = true;
+            }
+            
             if (isAdmin) {
                 document.getElementById('adminBadge').style.display = 'inline';
+                document.getElementById('adminBadge').innerHTML = '👑 ADMIN';
                 document.getElementById('tabAgents').style.display = 'inline-block';
                 document.getElementById('filterSection').style.display = 'block';
                 document.getElementById('statsTitle').textContent = ' Mis Estadísticas';
                 document.getElementById('monthlyTitle').textContent = ' Estadísticas Mensuales';
                 document.getElementById('monthlyAgentFilter').style.display = 'block';
                 populateMonthlyAgentSelector();
+            } else if (isSupport) {
+                document.getElementById('adminBadge').style.display = 'inline';
+                document.getElementById('adminBadge').innerHTML = '🛠️ ST';
+                document.getElementById('adminBadge').style.background = '#17a2b8';
+                document.getElementById('tabAgents').style.display = 'none';
+                document.getElementById('filterSection').style.display = 'none';
+                document.getElementById('statsTitle').textContent = ' Mis Estadísticas';
+                document.getElementById('monthlyTitle').textContent = ' Mis Estadísticas Mensuales';
+                document.getElementById('monthlyAgentFilter').style.display = 'none';
             } else {
                 document.getElementById('adminBadge').style.display = 'none';
                 document.getElementById('tabAgents').style.display = 'none';
@@ -1529,12 +1801,17 @@
                 document.getElementById('monthlyAgentFilter').style.display = 'none';
             }
             
+            // Mostrar/ocultar burbuja de soporte y buzón
+            document.getElementById('supportBubble').style.display = isSupport ? 'none' : 'flex';
+            document.getElementById('supportInboxBtn').style.display = isSupport ? 'flex' : 'none';
+            
             migrateOldData();
             updateStats();
             displayClients();
             updateArchivedCount();
             populateMonthSelector();
             if (isAdmin) populateAgentSelector();
+            if (isSupport) updateSupportBadge();
         }
 
         // ============ CLIENT FORM ============
@@ -1621,6 +1898,7 @@
 
         function switchClientTab(tab) {
             showingArchived = (tab === 'archivados');
+            currentPage = 1; // Resetear a página 1
             document.getElementById('tabRegistrados').classList.toggle('active', !showingArchived);
             document.getElementById('tabArchivados').classList.toggle('active', showingArchived);
             displayClients();
@@ -1678,8 +1956,17 @@
                 return;
             }
 
-            for (var j = 0; j < filteredClients.length; j++) {
-                var item = filteredClients[j];
+            // Paginación
+            var totalPages = Math.ceil(filteredClients.length / clientsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            
+            var startIndex = (currentPage - 1) * clientsPerPage;
+            var endIndex = Math.min(startIndex + clientsPerPage, filteredClients.length);
+            var paginatedClients = filteredClients.slice(startIndex, endIndex);
+
+            for (var j = 0; j < paginatedClients.length; j++) {
+                var item = paginatedClients[j];
                 var client = item.client;
                 var index = item.originalIndex;
                 var stage = getClientStage(client);
@@ -1711,11 +1998,20 @@
                     actionsHTML = '<button class="btn-small btn-call" onclick="openCallModal(' + index + ')">+Llamada</button><button class="btn-small btn-follow" onclick="openFollowUp(' + index + ')">Seguimiento</button><button class="btn-small btn-edit" onclick="editClient(' + index + ')">Editar</button><button class="btn-small btn-delete" onclick="deleteClient(' + index + ')">Borrar</button>';
                 }
                 
-                // Botones de contacto
+                // Botones de contacto - WhatsApp internacional
                 var phoneClean = client.telefono.replace(/\D/g, '');
+                // Si el número ya tiene código de país (empieza con + o tiene más de 10 dígitos), usarlo directamente
+                // Si no, asumir Uruguay (598)
+                var whatsappNumber = phoneClean;
+                if (phoneClean.length <= 9) {
+                    whatsappNumber = '598' + phoneClean;
+                } else if (phoneClean.startsWith('0')) {
+                    whatsappNumber = '598' + phoneClean.substring(1);
+                }
+                
                 var contactButtonsHTML = '<div class="contact-buttons">';
                 contactButtonsHTML += '<a href="tel:' + client.telefono + '" class="contact-btn btn-call-phone">📞 Llamar</a>';
-                contactButtonsHTML += '<a href="https://wa.me/598' + phoneClean + '" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>';
+                contactButtonsHTML += '<a href="https://wa.me/' + whatsappNumber + '" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>';
                 if (client.direccion) {
                     contactButtonsHTML += '<a href="https://www.google.com/maps/search/' + encodeURIComponent(client.direccion) + '" target="_blank" class="contact-btn btn-maps">📍 Mapa</a>';
                 }
@@ -1727,6 +2023,17 @@
                 card.innerHTML = '<div class="client-header"><div><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div><div class="client-actions">' + actionsHTML + '</div></div><div class="client-info"><div class="info-item"><span class="info-label">Teléfono:</span> ' + client.telefono + '</div><div class="info-item"><span class="info-label">Dirección:</span> ' + (client.direccion || 'N/A') + '</div><div class="info-item"><span class="info-label">Llamadas:</span> ' + client.cantidadLlamadas + '</div><div class="info-item"><span class="info-label">Último contacto:</span> ' + fechaFormateada + '</div></div>' + contactButtonsHTML + '<span class="stage-badge ' + stage.class + '">' + stage.badge + '</span>' + notaHTML + ventaHTML;
                 list.appendChild(card);
             }
+            
+            // Agregar controles de paginación
+            if (totalPages > 1) {
+                var paginationHTML = '<div class="pagination">';
+                paginationHTML += '<button onclick="prevPage()" ' + (currentPage === 1 ? 'disabled' : '') + '>← Anterior</button>';
+                paginationHTML += '<span class="page-info">Página ' + currentPage + ' de ' + totalPages + ' (' + filteredClients.length + ' clientes)</span>';
+                paginationHTML += '<button onclick="nextPage()" ' + (currentPage === totalPages ? 'disabled' : '') + '>Siguiente →</button>';
+                paginationHTML += '</div>';
+                list.insertAdjacentHTML('beforeend', paginationHTML);
+            }
+            
             updateArchivedCount();
         }
 
@@ -2071,14 +2378,20 @@
             client.venta = { precio: document.getElementById('precioVenta').value, nombreComprador: document.getElementById('nombreComprador').value, telefono: document.getElementById('telefonoComprador').value, fecha: document.getElementById('fechaVenta').value };
             client.seguimiento.vendida = true;
             client.ultimoContacto = new Date().toISOString();
+            
+            // Auto-archivar propiedad vendida/alquilada
+            client.archivado = true;
+            client.fechaArchivado = new Date().toISOString();
+            
             saveToFirebase();
             displayClients();
+            updateArchivedCount();
             updateStats();
             populateMonthSelector();
             if (isAdmin) populateAgentSelector();
             closeSaleModal();
             closeModal();
-            alert(client.tipoOperacion === 'alquiler' ? ' ¡Alquiler registrado!' : ' ¡Venta registrada!');
+            alert(client.tipoOperacion === 'alquiler' ? ' ¡Alquiler registrado! El cliente fue archivado automáticamente.' : ' ¡Venta registrada! El cliente fue archivado automáticamente.');
         }
 
         // ============ EDIT/DELETE ============
@@ -2487,8 +2800,195 @@
         }
 
         window.onclick = function(event) {
-            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal'];
+            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal'];
             for (var i = 0; i < modals.length; i++) { var modal = document.getElementById(modals[i]); if (event.target === modal) { modal.style.display = 'none'; if (modals[i] !== 'callModal') currentClientIndex = -1; } }
+        }
+
+        // ============ SOPORTE TÉCNICO ============
+        function toggleSupportChat() {
+            var chat = document.getElementById('supportChat');
+            chat.classList.toggle('show');
+            if (chat.classList.contains('show')) {
+                renderMySupportMessages();
+            }
+        }
+
+        function sendSupportMessage() {
+            var input = document.getElementById('supportMessageInput');
+            var message = input.value.trim();
+            if (!message) return;
+
+            var newMessage = {
+                id: Date.now(),
+                from: currentAgent,
+                fromCedula: getCurrentUserCedula(),
+                message: message,
+                timestamp: new Date().toISOString(),
+                read: false,
+                replies: []
+            };
+
+            supportMessages.push(newMessage);
+            saveSupportMessages();
+            input.value = '';
+            renderMySupportMessages();
+        }
+
+        function getCurrentUserCedula() {
+            var user = findUser(currentAgent);
+            return user ? (user.cedula || 'N/A') : 'N/A';
+        }
+
+        function renderMySupportMessages() {
+            var container = document.getElementById('supportChatMessages');
+            var html = '<div class="support-message received"><div>¡Hola! Soy el soporte técnico. ¿En qué puedo ayudarte?</div><div class="support-message-time">Sistema</div></div>';
+            
+            var myMessages = supportMessages.filter(function(m) { return m.from === currentAgent; });
+            
+            for (var i = 0; i < myMessages.length; i++) {
+                var msg = myMessages[i];
+                var time = new Date(msg.timestamp).toLocaleString('es-ES');
+                html += '<div class="support-message sent"><div>' + msg.message + '</div><div class="support-message-time">' + time + '</div></div>';
+                
+                // Mostrar respuestas
+                if (msg.replies) {
+                    for (var j = 0; j < msg.replies.length; j++) {
+                        var reply = msg.replies[j];
+                        var replyTime = new Date(reply.timestamp).toLocaleString('es-ES');
+                        html += '<div class="support-message received"><div>' + reply.message + '</div><div class="support-message-time">Soporte - ' + replyTime + '</div></div>';
+                    }
+                }
+            }
+            
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function saveSupportMessages() {
+            if (firebaseInitialized && db) {
+                db.ref('supportMessages').set(supportMessages);
+            }
+        }
+
+        function updateSupportBadge() {
+            if (!isSupport) return;
+            var unread = supportMessages.filter(function(m) { return !m.read; }).length;
+            var badge = document.getElementById('supportBadge');
+            if (unread > 0) {
+                badge.textContent = unread;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function openSupportInbox() {
+            document.getElementById('supportInboxModal').style.display = 'block';
+            renderSupportInbox();
+        }
+
+        function closeSupportInbox() {
+            document.getElementById('supportInboxModal').style.display = 'none';
+        }
+
+        function renderSupportInbox() {
+            var container = document.getElementById('supportInboxList');
+            if (supportMessages.length === 0) {
+                container.innerHTML = '<p style="color: #666; text-align: center;">No hay mensajes pendientes</p>';
+                return;
+            }
+
+            var html = '';
+            // Ordenar por fecha (más reciente primero)
+            var sorted = supportMessages.slice().sort(function(a, b) {
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+
+            for (var i = 0; i < sorted.length; i++) {
+                var msg = sorted[i];
+                var time = new Date(msg.timestamp).toLocaleString('es-ES');
+                var statusColor = msg.read ? '#28a745' : '#dc3545';
+                var statusText = msg.read ? '✓ Leído' : '● Nuevo';
+                
+                html += '<div style="border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 10px; background: ' + (msg.read ? '#f8f9fa' : '#fff3cd') + ';">';
+                html += '<div style="display: flex; justify-content: space-between; margin-bottom: 10px;">';
+                html += '<strong>' + msg.from + '</strong>';
+                html += '<span style="color: ' + statusColor + '; font-size: 0.85em;">' + statusText + '</span>';
+                html += '</div>';
+                html += '<div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">CI: ' + msg.fromCedula + ' | ' + time + '</div>';
+                html += '<div style="background: white; padding: 10px; border-radius: 5px; margin-bottom: 10px;">' + msg.message + '</div>';
+                
+                // Mostrar respuestas
+                if (msg.replies && msg.replies.length > 0) {
+                    html += '<div style="margin-left: 20px; border-left: 3px solid #17a2b8; padding-left: 10px;">';
+                    for (var j = 0; j < msg.replies.length; j++) {
+                        var reply = msg.replies[j];
+                        var replyTime = new Date(reply.timestamp).toLocaleString('es-ES');
+                        html += '<div style="background: #e3f2fd; padding: 8px; border-radius: 5px; margin-bottom: 5px;"><small style="color: #666;">' + replyTime + '</small><br>' + reply.message + '</div>';
+                    }
+                    html += '</div>';
+                }
+                
+                html += '<div style="display: flex; gap: 10px; margin-top: 10px;">';
+                html += '<input type="text" id="reply-' + msg.id + '" placeholder="Escribir respuesta..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">';
+                html += '<button onclick="replyToSupport(' + msg.id + ')" style="background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Responder</button>';
+                if (!msg.read) {
+                    html += '<button onclick="markAsRead(' + msg.id + ')" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">✓</button>';
+                }
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function replyToSupport(msgId) {
+            var input = document.getElementById('reply-' + msgId);
+            var replyText = input.value.trim();
+            if (!replyText) return;
+
+            for (var i = 0; i < supportMessages.length; i++) {
+                if (supportMessages[i].id === msgId) {
+                    if (!supportMessages[i].replies) supportMessages[i].replies = [];
+                    supportMessages[i].replies.push({
+                        message: replyText,
+                        timestamp: new Date().toISOString(),
+                        from: 'Soporte Técnico'
+                    });
+                    supportMessages[i].read = true;
+                    break;
+                }
+            }
+            saveSupportMessages();
+            renderSupportInbox();
+        }
+
+        function markAsRead(msgId) {
+            for (var i = 0; i < supportMessages.length; i++) {
+                if (supportMessages[i].id === msgId) {
+                    supportMessages[i].read = true;
+                    break;
+                }
+            }
+            saveSupportMessages();
+            renderSupportInbox();
+            updateSupportBadge();
+        }
+
+        // ============ PAGINACION ============
+        function goToPage(page) {
+            currentPage = page;
+            displayClients();
+        }
+
+        function nextPage() {
+            currentPage++;
+            displayClients();
+        }
+
+        function prevPage() {
+            currentPage--;
+            displayClients();
         }
     </script>
 </body>
