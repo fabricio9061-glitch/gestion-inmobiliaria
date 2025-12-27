@@ -1385,12 +1385,72 @@
 
     <!-- Modal Inbox de Soporte (para ST) -->
     <div id="supportInboxModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8, #138496); color: white;">
                 <h2>📬 Inbox de Soporte Técnico</h2>
                 <span class="close" onclick="closeSupportInbox()" style="color: white;">&times;</span>
             </div>
-            <div id="supportInboxList" style="max-height: 500px; overflow-y: auto; padding: 15px;"></div>
+            <div style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="openUserManagement()" class="btn" style="background: #6f42c1; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">👥 Gestionar Usuarios</button>
+                <button onclick="clearSupportInbox()" class="btn" style="background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🗑️ Limpiar Inbox</button>
+            </div>
+            <div id="supportInboxList" style="max-height: 450px; overflow-y: auto; padding: 15px;"></div>
+        </div>
+    </div>
+
+    <!-- Modal Gestión de Usuarios (para ST) -->
+    <div id="userManagementModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white;">
+                <h2>👥 Gestión de Usuarios</h2>
+                <span class="close" onclick="closeUserManagement()" style="color: white;">&times;</span>
+            </div>
+            <div style="padding: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="userSearchInput" placeholder="🔍 Buscar usuario..." oninput="renderUserList()" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div id="userManagementList" style="max-height: 450px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Usuario (para ST) -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white;">
+                <h2>✏️ Editar Usuario</h2>
+                <span class="close" onclick="closeEditUser()" style="color: white;">&times;</span>
+            </div>
+            <div style="padding: 20px;">
+                <input type="hidden" id="editUserIndex">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" id="editUserName" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div class="form-group">
+                    <label>Cédula</label>
+                    <input type="text" id="editUserCedula" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;" readonly>
+                    <small style="color: #666;">La cédula no se puede modificar</small>
+                </div>
+                <div class="form-group">
+                    <label>Rol</label>
+                    <select id="editUserRole" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="agent">👤 Agente</option>
+                        <option value="support">🛠️ Soporte Técnico</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Oficina</label>
+                    <select id="editUserOficina" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="">Sin oficina</option>
+                        <option value="imperium_harmony">🏢 Imperium Harmony</option>
+                    </select>
+                </div>
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button onclick="saveUserChanges()" class="btn btn-success">💾 Guardar Cambios</button>
+                    <button onclick="closeEditUser()" class="btn btn-secondary">Cancelar</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -3264,7 +3324,7 @@
         }
 
         window.onclick = function(event) {
-            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal'];
+            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal', 'userManagementModal', 'editUserModal'];
             for (var i = 0; i < modals.length; i++) { var modal = document.getElementById(modals[i]); if (event.target === modal) { modal.style.display = 'none'; if (modals[i] !== 'callModal') currentClientIndex = -1; } }
         }
 
@@ -3437,6 +3497,197 @@
             saveSupportMessages();
             renderSupportInbox();
             updateSupportBadge();
+        }
+
+        // ============ GESTIÓN DE USUARIOS (ST) ============
+        function clearSupportInbox() {
+            if (!isSupport) return;
+            if (!confirm('¿Estás seguro de que quieres eliminar TODOS los mensajes del inbox?\n\nEsta acción no se puede deshacer.')) return;
+            
+            supportMessages = [];
+            saveSupportMessages();
+            renderSupportInbox();
+            updateSupportBadge();
+            alert('✅ Inbox limpiado correctamente');
+        }
+
+        function openUserManagement() {
+            if (!isSupport) return;
+            document.getElementById('userManagementModal').style.display = 'block';
+            renderUserList();
+        }
+
+        function closeUserManagement() {
+            document.getElementById('userManagementModal').style.display = 'none';
+        }
+
+        function renderUserList() {
+            if (!isSupport) return;
+            var container = document.getElementById('userManagementList');
+            var searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+            
+            var filteredUsers = users.filter(function(u) {
+                return u.username.toLowerCase().includes(searchTerm) || 
+                       (u.cedula && u.cedula.includes(searchTerm));
+            });
+            
+            if (filteredUsers.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No se encontraron usuarios</p>';
+                return;
+            }
+            
+            var html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="background: #f8f9fa;">';
+            html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Usuario</th>';
+            html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Cédula</th>';
+            html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Rol</th>';
+            html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Oficina</th>';
+            html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Acciones</th>';
+            html += '</tr></thead><tbody>';
+            
+            for (var i = 0; i < filteredUsers.length; i++) {
+                var user = filteredUsers[i];
+                var userIndex = users.indexOf(user);
+                var roleBadge = '';
+                var isAdminUser = user.username === ADMIN_USER;
+                var isSupportUser = user.username === SUPPORT_USER || user.role === 'support';
+                
+                if (isAdminUser) {
+                    roleBadge = '<span style="background: #ffc107; color: #333; padding: 3px 8px; border-radius: 10px; font-size: 0.8em;">👑 ADMIN</span>';
+                } else if (isSupportUser) {
+                    roleBadge = '<span style="background: #17a2b8; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em;">🛠️ ST</span>';
+                } else {
+                    roleBadge = '<span style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.8em;">👤 Agente</span>';
+                }
+                
+                var oficinaNombre = 'Sin oficina';
+                if (user.oficina && OFICINAS[user.oficina]) {
+                    oficinaNombre = OFICINAS[user.oficina].icono + ' ' + OFICINAS[user.oficina].nombre;
+                }
+                
+                var lastLogin = user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('es-ES') : 'Nunca';
+                
+                html += '<tr style="border-bottom: 1px solid #eee;">';
+                html += '<td style="padding: 12px;">';
+                html += '<div style="font-weight: bold;">' + user.username + '</div>';
+                html += '<div style="font-size: 0.8em; color: #666;">Último acceso: ' + lastLogin + '</div>';
+                html += '</td>';
+                html += '<td style="padding: 12px;">' + (user.cedula || 'N/A') + '</td>';
+                html += '<td style="padding: 12px;">' + roleBadge + '</td>';
+                html += '<td style="padding: 12px; font-size: 0.9em;">' + oficinaNombre + '</td>';
+                html += '<td style="padding: 12px; text-align: center;">';
+                
+                // No permitir editar/eliminar al ADMIN principal
+                if (!isAdminUser) {
+                    html += '<button onclick="editUser(' + userIndex + ')" style="background: #ffc107; color: #333; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px;">✏️</button>';
+                    html += '<button onclick="deleteUser(' + userIndex + ')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">🗑️</button>';
+                } else {
+                    html += '<span style="color: #999; font-size: 0.8em;">Protegido</span>';
+                }
+                
+                html += '</td>';
+                html += '</tr>';
+            }
+            
+            html += '</tbody></table>';
+            html += '<div style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 5px; font-size: 0.85em;">';
+            html += '📊 Total de usuarios: <strong>' + users.length + '</strong>';
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        function editUser(index) {
+            var user = users[index];
+            if (!user) return;
+            
+            // No permitir editar al ADMIN
+            if (user.username === ADMIN_USER) {
+                alert('No puedes editar al administrador principal.');
+                return;
+            }
+            
+            document.getElementById('editUserIndex').value = index;
+            document.getElementById('editUserName').value = user.username;
+            document.getElementById('editUserCedula').value = user.cedula || '';
+            document.getElementById('editUserRole').value = user.role || 'agent';
+            document.getElementById('editUserOficina').value = user.oficina || '';
+            
+            document.getElementById('editUserModal').style.display = 'block';
+        }
+
+        function closeEditUser() {
+            document.getElementById('editUserModal').style.display = 'none';
+        }
+
+        function saveUserChanges() {
+            var index = parseInt(document.getElementById('editUserIndex').value);
+            var user = users[index];
+            if (!user) return;
+            
+            var newName = document.getElementById('editUserName').value.trim();
+            var newRole = document.getElementById('editUserRole').value;
+            var newOficina = document.getElementById('editUserOficina').value;
+            
+            if (!newName) {
+                alert('El nombre no puede estar vacío');
+                return;
+            }
+            
+            // Si el nombre cambió, actualizar también los clientes asociados
+            var oldName = user.username;
+            if (oldName !== newName) {
+                // Verificar que el nuevo nombre no exista
+                for (var i = 0; i < users.length; i++) {
+                    if (i !== index && users[i].username.toLowerCase() === newName.toLowerCase()) {
+                        alert('Ya existe un usuario con ese nombre');
+                        return;
+                    }
+                }
+                
+                // Actualizar nombre en clientes
+                for (var j = 0; j < clients.length; j++) {
+                    if (clients[j].agente === oldName) {
+                        clients[j].agente = newName;
+                    }
+                }
+                saveToFirebase();
+            }
+            
+            user.username = newName;
+            user.role = newRole;
+            user.oficina = newOficina;
+            
+            saveUsersToFirebase();
+            closeEditUser();
+            renderUserList();
+            alert('✅ Usuario actualizado correctamente');
+        }
+
+        function deleteUser(index) {
+            var user = users[index];
+            if (!user) return;
+            
+            // No permitir eliminar al ADMIN
+            if (user.username === ADMIN_USER) {
+                alert('No puedes eliminar al administrador principal.');
+                return;
+            }
+            
+            // No permitir eliminarse a sí mismo
+            if (user.username === currentAgent) {
+                alert('No puedes eliminar tu propia cuenta.');
+                return;
+            }
+            
+            if (!confirm('¿Estás seguro de que quieres eliminar al usuario "' + user.username + '"?\n\nEsta acción no se puede deshacer.\n\nNota: Los clientes asociados a este usuario NO serán eliminados.')) {
+                return;
+            }
+            
+            users.splice(index, 1);
+            saveUsersToFirebase();
+            renderUserList();
+            alert('✅ Usuario eliminado correctamente');
         }
 
         // ============ PAGINACION ============
