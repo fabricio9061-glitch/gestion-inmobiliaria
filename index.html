@@ -1330,6 +1330,31 @@
         </div>
     </div>
 
+    <!-- Modal de Llamada Rápida -->
+    <div id="quickCallModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>📞 Llamar a Cliente</h2>
+                <span class="close" onclick="closeQuickCallModal()">&times;</span>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 10px;" id="quickCallClientName"></div>
+                <div style="color: #666; margin-bottom: 25px;" id="quickCallPhone"></div>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <button id="btnQuickCallNormal" class="btn" style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 15px; font-size: 1.1em; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        📞 Llamada Normal
+                    </button>
+                    <button id="btnQuickCallWhatsapp" class="btn" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white; padding: 15px; font-size: 1.1em; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        💬 WhatsApp
+                    </button>
+                </div>
+                
+                <p style="color: #999; font-size: 0.85em; margin-top: 20px;">Al realizar la llamada, se te preguntará si deseas registrarla.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Agregar Llamada -->
     <div id="callModal" class="modal">
         <div class="modal-content">
@@ -2031,9 +2056,9 @@
             input.onchange = function(e) {
                 var file = e.target.files[0];
                 if (file) {
-                    // Validar tamaño (máximo 500KB)
-                    if (file.size > 500000) {
-                        alert('La imagen es muy grande. Máximo 500KB.');
+                    // Validar tamaño (máximo 10MB)
+                    if (file.size > 10000000) {
+                        alert('La imagen es muy grande. Máximo 10MB.');
                         return;
                     }
                     var reader = new FileReader();
@@ -2042,28 +2067,23 @@
                         var img = new Image();
                         img.onload = function() {
                             var canvas = document.createElement('canvas');
-                            var maxSize = 100;
+                            var maxSize = 200; // Tamaño mayor para mejor calidad
                             var width = img.width;
                             var height = img.height;
                             
-                            if (width > height) {
-                                if (width > maxSize) {
-                                    height *= maxSize / width;
-                                    width = maxSize;
-                                }
-                            } else {
-                                if (height > maxSize) {
-                                    width *= maxSize / height;
-                                    height = maxSize;
-                                }
-                            }
+                            // Calcular el recorte cuadrado centrado
+                            var size = Math.min(width, height);
+                            var startX = (width - size) / 2;
+                            var startY = (height - size) / 2;
                             
-                            canvas.width = width;
-                            canvas.height = height;
+                            canvas.width = maxSize;
+                            canvas.height = maxSize;
                             var ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, width, height);
                             
-                            var compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                            // Dibujar la imagen recortada y centrada
+                            ctx.drawImage(img, startX, startY, size, size, 0, 0, maxSize, maxSize);
+                            
+                            var compressedData = canvas.toDataURL('image/jpeg', 0.8);
                             clients[index].foto = compressedData;
                             saveToFirebase();
                             displayClients();
@@ -2074,6 +2094,65 @@
                 }
             };
             input.click();
+        }
+
+        // ============ MODAL DE LLAMADA RÁPIDA ============
+        function quickCall(index) {
+            currentClientIndex = index;
+            var client = clients[index];
+            var phoneClean = client.telefono.replace(/\D/g, '');
+            var whatsappNumber = phoneClean;
+            if (phoneClean.length <= 9) {
+                whatsappNumber = '598' + phoneClean;
+            } else if (phoneClean.startsWith('0')) {
+                whatsappNumber = '598' + phoneClean.substring(1);
+            }
+            
+            document.getElementById('quickCallClientName').textContent = client.nombre;
+            document.getElementById('quickCallPhone').textContent = client.telefono;
+            document.getElementById('btnQuickCallNormal').onclick = function() {
+                window.location.href = 'tel:' + client.telefono;
+                setTimeout(function() { askIfCallMade(index); }, 1000);
+            };
+            document.getElementById('btnQuickCallWhatsapp').onclick = function() {
+                window.open('https://wa.me/' + whatsappNumber, '_blank');
+                setTimeout(function() { askIfCallMade(index); }, 1000);
+            };
+            document.getElementById('quickCallModal').style.display = 'block';
+        }
+
+        function closeQuickCallModal() {
+            document.getElementById('quickCallModal').style.display = 'none';
+        }
+
+        function askIfCallMade(index) {
+            closeQuickCallModal();
+            if (confirm('¿Se realizó la llamada?\n\nSi confirmas, se registrará automáticamente.')) {
+                registerQuickCall(index);
+            }
+        }
+
+        function registerQuickCall(index) {
+            var client = clients[index];
+            var now = new Date();
+            client.historialLlamadas = client.historialLlamadas || [];
+            client.historialLlamadas.push({ 
+                fecha: now.toISOString().split('T')[0], 
+                hora: now.toTimeString().slice(0, 5), 
+                nota: 'Llamada rápida' 
+            });
+            client.cantidadLlamadas = client.historialLlamadas.length;
+            client.ultimoContacto = now.toISOString();
+            
+            // Marcar que se llamó en seguimiento
+            if (client.seguimiento.seLlamo === null) {
+                client.seguimiento.seLlamo = true;
+            }
+            
+            saveToFirebase();
+            displayClients();
+            updateStats();
+            alert('✅ Llamada registrada correctamente');
         }
 
         function displayClients() {
@@ -2170,13 +2249,12 @@
                 }
                 
                 detailsHTML += '<div class="contact-buttons" style="margin-top: 10px;">';
-                detailsHTML += '<a href="tel:' + client.telefono + '" class="contact-btn btn-call-phone">📞 Llamar</a>';
-                detailsHTML += '<a href="https://wa.me/' + whatsappNumber + '" target="_blank" class="contact-btn btn-whatsapp">💬 WhatsApp</a>';
+                detailsHTML += '<button onclick="event.stopPropagation(); quickCall(' + index + ')" class="contact-btn btn-call-phone">📞 Llamar / WhatsApp</button>';
                 if (client.direccion) {
-                    detailsHTML += '<a href="https://www.google.com/maps/search/' + encodeURIComponent(client.direccion) + '" target="_blank" class="contact-btn btn-maps">📍 Mapa</a>';
+                    detailsHTML += '<a href="https://www.google.com/maps/search/' + encodeURIComponent(client.direccion) + '" target="_blank" class="contact-btn btn-maps" onclick="event.stopPropagation();">📍 Mapa</a>';
                 }
                 if (client.linkPropiedad) {
-                    detailsHTML += '<a href="' + client.linkPropiedad + '" target="_blank" class="contact-btn btn-link">🔗 Ver Propiedad</a>';
+                    detailsHTML += '<a href="' + client.linkPropiedad + '" target="_blank" class="contact-btn btn-link" onclick="event.stopPropagation();">🔗 Ver Propiedad</a>';
                 }
                 detailsHTML += '</div>';
                 
@@ -3038,7 +3116,7 @@
         }
 
         window.onclick = function(event) {
-            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal'];
+            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal'];
             for (var i = 0; i < modals.length; i++) { var modal = document.getElementById(modals[i]); if (event.target === modal) { modal.style.display = 'none'; if (modals[i] !== 'callModal') currentClientIndex = -1; } }
         }
 
