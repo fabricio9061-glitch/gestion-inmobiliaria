@@ -122,9 +122,122 @@
         .dropdown-item.danger { color: #dc3545; }
         .dropdown-item.danger:hover { background: #f8d7da; }
         .dropdown-item i { margin-right: 10px; }
-        .content { display: grid; grid-template-columns: 1fr 380px; gap: 0; }
+        .content { display: grid; grid-template-columns: 1fr 350px 300px; gap: 0; }
         .form-section { padding: 30px; border-right: 2px solid #e0e0e0; }
-        .stats-section { padding: 30px; background: #f8f9fa; }
+        .stats-section { padding: 30px; background: #f8f9fa; border-right: 2px solid #e0e0e0; }
+        .chat-section { padding: 20px; background: #fff; display: flex; flex-direction: column; height: calc(100vh - 120px); }
+        .chat-header { margin-bottom: 15px; }
+        .chat-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .chat-tab { 
+            flex: 1; 
+            padding: 8px; 
+            border: none; 
+            background: #e9ecef; 
+            cursor: pointer; 
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .chat-tab.active { background: #d2a94d; color: white; }
+        .online-users { 
+            background: #f8f9fa; 
+            border-radius: 10px; 
+            padding: 10px; 
+            margin-bottom: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .online-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        .online-user:hover { background: #e9ecef; }
+        .online-user.selected { background: #d2a94d22; }
+        .online-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+        .online-indicator.offline { background: #6c757d; }
+        .online-user-name { font-size: 0.9em; flex: 1; }
+        .online-user-office { font-size: 0.7em; color: #666; }
+        .chat-messages {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            min-height: 200px;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            max-width: 85%;
+        }
+        .chat-message.sent {
+            margin-left: auto;
+            text-align: right;
+        }
+        .chat-message-bubble {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+        .chat-message.sent .chat-message-bubble {
+            background: #d2a94d;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .chat-message.received .chat-message-bubble {
+            background: white;
+            border: 1px solid #ddd;
+            border-bottom-left-radius: 5px;
+        }
+        .chat-message-sender {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 2px;
+        }
+        .chat-message-time {
+            font-size: 0.7em;
+            color: #999;
+            margin-top: 2px;
+        }
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input-container input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+        .chat-input-container button {
+            background: #d2a94d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .unread-badge {
+            background: #dc3545;
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
         .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
@@ -704,10 +817,17 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
         .loading-text { margin-top: 15px; color: #666; font-weight: 600; }
+        @media (max-width: 1400px) {
+            .content { grid-template-columns: 1fr 320px; }
+            .chat-section { display: none; }
+            .chat-float-btn { display: flex !important; }
+        }
         @media (max-width: 1024px) {
             .content { grid-template-columns: 1fr; }
             .form-section { border-right: none; border-bottom: 2px solid #e0e0e0; }
+            .stats-section { border-right: none; }
             .agent-info { position: static; margin-bottom: 15px; text-align: center; }
+            .chat-section { display: none; }
         }
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -728,6 +848,53 @@
             .top-agent { flex-wrap: wrap; }
             .top-score { width: 100%; text-align: right; margin-top: 5px; }
         }
+        /* Botón flotante de chat */
+        .chat-float-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, #d2a94d, #b6802d);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 999;
+            font-size: 1.4em;
+            color: white;
+        }
+        .chat-float-btn .unread-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 0.6em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-modal {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            z-index: 1002;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-modal.show { display: flex; }
         /* Botones de contacto */
         .contact-buttons {
             display: flex;
@@ -987,6 +1154,13 @@
                     <input type="text" id="regCedula" placeholder="Ej: 12345678...">
                 </div>
                 <div class="form-group">
+                    <label for="regOficina">Oficina</label>
+                    <select id="regOficina" required>
+                        <option value="">Seleccionar oficina...</option>
+                        <option value="imperium_harmony">🏢 Imperium Harmony</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="regPassword">Contrasena</label>
                     <input type="password" id="regPassword" placeholder="Crea una contrasena...">
                 </div>
@@ -1007,6 +1181,7 @@
                     <strong>👤 Agente:</strong>
                     <span id="currentAgentDisplay"></span>
                     <span id="adminBadge" class="admin-badge" style="display: none;">👑 ADMIN</span>
+                    <span id="oficinaBadge" style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 5px; display: none;"></span>
                     <span id="syncStatus" class="sync-status sync-online">🟢 En línea</span>
                 </div>
                 <h1>🏠 Gestión de Clientes Inmobiliarios</h1>
@@ -1274,6 +1449,68 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Chat Section -->
+                <div class="chat-section" id="chatSection">
+                    <div class="chat-header">
+                        <h3 style="margin: 0; color: #333; font-size: 1.1em;">💬 Chat de Agentes</h3>
+                    </div>
+                    
+                    <div class="chat-tabs">
+                        <button class="chat-tab active" id="tabChatGrupal" onclick="switchChatTab('grupal')">👥 Grupal</button>
+                        <button class="chat-tab" id="tabChatPrivado" onclick="switchChatTab('privado')">👤 Privado</button>
+                    </div>
+                    
+                    <!-- Usuarios en línea -->
+                    <div class="online-users" id="onlineUsersList">
+                        <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
+                            <span id="onlineCount">0</span> en línea
+                        </div>
+                        <div id="onlineUsersContainer"></div>
+                    </div>
+                    
+                    <!-- Área de mensajes -->
+                    <div class="chat-messages" id="chatMessages">
+                        <p style="color: #999; text-align: center; font-size: 0.9em;">Cargando mensajes...</p>
+                    </div>
+                    
+                    <!-- Input de mensaje -->
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                        <button onclick="sendChatMessage()">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón flotante de chat (para móviles) -->
+    <div class="chat-float-btn" id="chatFloatBtn" onclick="toggleChatModal()">
+        💬
+        <span class="unread-count" id="chatUnreadCount" style="display: none;">0</span>
+    </div>
+
+    <!-- Modal de chat para móviles -->
+    <div class="chat-modal" id="chatModal">
+        <div style="background: linear-gradient(135deg, #d2a94d, #b6802d); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="margin: 0;">💬 Chat de Agentes</h4>
+            <button onclick="toggleChatModal()" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer;">×</button>
+        </div>
+        <div style="padding: 10px; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="chat-tabs" style="margin-bottom: 10px;">
+                <button class="chat-tab active" id="tabChatGrupalMobile" onclick="switchChatTab('grupal')">👥 Grupal</button>
+                <button class="chat-tab" id="tabChatPrivadoMobile" onclick="switchChatTab('privado')">👤 Privado</button>
+            </div>
+            <div class="online-users" id="onlineUsersListMobile" style="max-height: 100px;">
+                <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">
+                    <span id="onlineCountMobile">0</span> en línea
+                </div>
+                <div id="onlineUsersContainerMobile"></div>
+            </div>
+            <div class="chat-messages" id="chatMessagesMobile" style="flex: 1; min-height: 150px;"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chatInputMobile" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <button onclick="sendChatMessage()">➤</button>
             </div>
         </div>
     </div>
@@ -1475,6 +1712,16 @@
         var ADMIN_USER = 'Diego Hernandez';
         var SUPPORT_USER = 'Anibal Malave';
         
+        // Configuración de oficinas
+        var OFICINAS = {
+            'imperium_harmony': {
+                nombre: 'Imperium Harmony',
+                lider: 'Diego Hernandez',
+                icono: '🏢'
+            }
+            // Agregar más oficinas aquí en el futuro
+        };
+        
         var clients = [];
         var users = [];
         var supportMessages = [];
@@ -1488,6 +1735,16 @@
         var agentStatsFilter = 'all';
         var currentPage = 1;
         var clientsPerPage = 5;
+        
+        // Variables del chat
+        var chatMessages = [];
+        var privateChats = {};
+        var onlineUsers = {};
+        var currentChatTab = 'grupal';
+        var selectedPrivateUser = null;
+        var chatUnreadCount = 0;
+        var lastSeenMessageId = localStorage.getItem('lastSeenMessageId') || '';
+        var presenceInterval = null;
 
         // ============ INICIALIZACION ============
         window.onload = function() {
@@ -1598,10 +1855,48 @@
                 }
             });
 
+            // Listener de chat grupal
+            db.ref('chatGrupal').orderByChild('timestamp').limitToLast(50).on('value', function(snapshot) {
+                var data = snapshot.val();
+                if (data) {
+                    chatMessages = Object.values(data).sort(function(a, b) {
+                        return a.timestamp - b.timestamp;
+                    });
+                } else {
+                    chatMessages = [];
+                }
+                if (currentAgent && currentChatTab === 'grupal') {
+                    renderChatMessages();
+                }
+            });
+
+            // Listener de usuarios en línea
+            db.ref('presence').on('value', function(snapshot) {
+                var data = snapshot.val();
+                onlineUsers = data || {};
+                if (currentAgent) {
+                    renderOnlineUsers();
+                }
+            });
+
+            // Listener de chats privados
+            db.ref('privateChats').on('value', function(snapshot) {
+                var data = snapshot.val();
+                privateChats = data || {};
+                if (currentAgent && currentChatTab === 'privado' && selectedPrivateUser) {
+                    renderChatMessages();
+                }
+                updateChatUnreadCount();
+            });
+
             // Estado de conexion
             db.ref('.info/connected').on('value', function(snapshot) {
                 if (snapshot.val() === true) {
                     updateSyncStatus('online');
+                    // Marcar usuario como en línea
+                    if (currentAgent) {
+                        setUserPresence(true);
+                    }
                 } else {
                     updateSyncStatus('offline');
                 }
@@ -1800,10 +2095,11 @@
             hideMessages();
             var username = document.getElementById('regUsername').value.trim();
             var cedula = document.getElementById('regCedula').value.trim();
+            var oficina = document.getElementById('regOficina').value;
             var password = document.getElementById('regPassword').value;
             var passwordConfirm = document.getElementById('regPasswordConfirm').value;
 
-            if (!username || !cedula || !password) { showError('Completa todos los campos'); return; }
+            if (!username || !cedula || !oficina || !password) { showError('Completa todos los campos'); return; }
             if (password !== passwordConfirm) { showError('Las contrasenas no coinciden'); return; }
             if (password.length < 4) { showError('Contrasena minimo 4 caracteres'); return; }
             if (cedula.length < 6) { showError('Cedula invalida'); return; }
@@ -1820,14 +2116,16 @@
             users.push({ 
                 username: username, 
                 cedula: cedula,
+                oficina: oficina,
                 password: password, 
                 role: 'agent',
                 createdAt: new Date().toISOString() 
             });
             saveUsersToFirebase();
-            showSuccess('Registro exitoso! Inicia sesion');
+            showSuccess('Registro exitoso! Bienvenido a ' + OFICINAS[oficina].nombre);
             document.getElementById('regUsername').value = '';
             document.getElementById('regCedula').value = '';
+            document.getElementById('regOficina').value = '';
             document.getElementById('regPassword').value = '';
             document.getElementById('regPasswordConfirm').value = '';
             setTimeout(function() { switchLoginTab('login'); }, 1500);
@@ -1855,6 +2153,14 @@
 
         function logout() {
             closeMenu();
+            
+            // Marcar como offline
+            setUserPresence(false);
+            if (presenceInterval) {
+                clearInterval(presenceInterval);
+                presenceInterval = null;
+            }
+            
             localStorage.removeItem(SESSION_KEY);
             currentAgent = '';
             isAdmin = false;
@@ -1880,6 +2186,22 @@
             var currentUserData = findUser(currentAgent);
             if (currentUserData && currentUserData.role === 'support') {
                 isSupport = true;
+            }
+            
+            // Mostrar badge de oficina
+            var oficinaBadge = document.getElementById('oficinaBadge');
+            if (currentUserData && currentUserData.oficina && OFICINAS[currentUserData.oficina]) {
+                var oficina = OFICINAS[currentUserData.oficina];
+                oficinaBadge.innerHTML = oficina.icono + ' ' + oficina.nombre;
+                oficinaBadge.style.display = 'inline';
+                
+                // Si es el líder de la oficina, mostrar indicador especial
+                if (currentAgent === oficina.lider) {
+                    oficinaBadge.style.background = '#d2a94d';
+                    oficinaBadge.innerHTML = '⭐ Líder - ' + oficina.nombre;
+                }
+            } else {
+                oficinaBadge.style.display = 'none';
             }
             
             if (isAdmin) {
@@ -1912,6 +2234,11 @@
             // Mostrar/ocultar burbuja de soporte y buzón
             document.getElementById('supportBubble').style.display = isSupport ? 'none' : 'flex';
             document.getElementById('supportInboxBtn').style.display = isSupport ? 'flex' : 'none';
+            
+            // Inicializar chat
+            setUserPresence(true);
+            renderOnlineUsers();
+            renderChatMessages();
             
             migrateOldData();
             updateStats();
@@ -3118,6 +3445,306 @@
         window.onclick = function(event) {
             var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal'];
             for (var i = 0; i < modals.length; i++) { var modal = document.getElementById(modals[i]); if (event.target === modal) { modal.style.display = 'none'; if (modals[i] !== 'callModal') currentClientIndex = -1; } }
+        }
+
+        // ============ CHAT DE AGENTES ============
+        function setUserPresence(isOnline) {
+            if (!db || !currentAgent) return;
+            
+            var currentUserData = findUser(currentAgent);
+            var userPresence = {
+                username: currentAgent,
+                online: isOnline,
+                lastSeen: Date.now(),
+                oficina: currentUserData ? currentUserData.oficina : ''
+            };
+            
+            db.ref('presence/' + sanitizeKey(currentAgent)).set(userPresence);
+            
+            // Configurar desconexión automática
+            if (isOnline) {
+                db.ref('presence/' + sanitizeKey(currentAgent)).onDisconnect().update({
+                    online: false,
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // Actualizar presencia cada 30 segundos
+                if (presenceInterval) clearInterval(presenceInterval);
+                presenceInterval = setInterval(function() {
+                    if (currentAgent) {
+                        db.ref('presence/' + sanitizeKey(currentAgent) + '/lastSeen').set(Date.now());
+                    }
+                }, 30000);
+            }
+        }
+
+        function sanitizeKey(str) {
+            return str.replace(/[.#$\/\[\]]/g, '_');
+        }
+
+        function switchChatTab(tab) {
+            currentChatTab = tab;
+            
+            // Actualizar tabs
+            document.getElementById('tabChatGrupal').classList.toggle('active', tab === 'grupal');
+            document.getElementById('tabChatPrivado').classList.toggle('active', tab === 'privado');
+            
+            // También actualizar tabs del modal móvil
+            var grupalMobile = document.getElementById('tabChatGrupalMobile');
+            var privadoMobile = document.getElementById('tabChatPrivadoMobile');
+            if (grupalMobile) grupalMobile.classList.toggle('active', tab === 'grupal');
+            if (privadoMobile) privadoMobile.classList.toggle('active', tab === 'privado');
+            
+            // Mostrar/ocultar lista de usuarios según tab
+            var onlineList = document.getElementById('onlineUsersList');
+            var onlineListMobile = document.getElementById('onlineUsersListMobile');
+            
+            if (tab === 'privado') {
+                if (onlineList) onlineList.style.display = 'block';
+                if (onlineListMobile) onlineListMobile.style.display = 'block';
+            } else {
+                selectedPrivateUser = null;
+                if (onlineList) onlineList.style.display = 'block';
+                if (onlineListMobile) onlineListMobile.style.display = 'block';
+            }
+            
+            renderChatMessages();
+        }
+
+        function renderOnlineUsers() {
+            var container = document.getElementById('onlineUsersContainer');
+            var containerMobile = document.getElementById('onlineUsersContainerMobile');
+            var countEl = document.getElementById('onlineCount');
+            var countElMobile = document.getElementById('onlineCountMobile');
+            
+            var html = '';
+            var onlineCount = 0;
+            var now = Date.now();
+            
+            // Ordenar usuarios: en línea primero, luego por nombre
+            var usersArray = Object.values(onlineUsers).sort(function(a, b) {
+                if (a.online && !b.online) return -1;
+                if (!a.online && b.online) return 1;
+                return a.username.localeCompare(b.username);
+            });
+            
+            for (var i = 0; i < usersArray.length; i++) {
+                var user = usersArray[i];
+                if (user.username === currentAgent) continue; // No mostrarme a mí mismo
+                
+                // Considerar en línea si fue visto en los últimos 60 segundos
+                var isOnline = user.online && (now - user.lastSeen) < 60000;
+                if (isOnline) onlineCount++;
+                
+                var oficinaNombre = '';
+                if (user.oficina && OFICINAS[user.oficina]) {
+                    oficinaNombre = OFICINAS[user.oficina].icono + ' ' + OFICINAS[user.oficina].nombre;
+                }
+                
+                var selectedClass = (selectedPrivateUser === user.username) ? 'selected' : '';
+                
+                html += '<div class="online-user ' + selectedClass + '" onclick="selectPrivateUser(\'' + user.username + '\')">';
+                html += '<span class="online-indicator ' + (isOnline ? '' : 'offline') + '"></span>';
+                html += '<div style="flex: 1;">';
+                html += '<div class="online-user-name">' + user.username + '</div>';
+                if (oficinaNombre) {
+                    html += '<div class="online-user-office">' + oficinaNombre + '</div>';
+                }
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            if (html === '') {
+                html = '<p style="color: #999; font-size: 0.85em; text-align: center;">No hay otros agentes</p>';
+            }
+            
+            if (container) container.innerHTML = html;
+            if (containerMobile) containerMobile.innerHTML = html;
+            if (countEl) countEl.textContent = onlineCount;
+            if (countElMobile) countElMobile.textContent = onlineCount;
+        }
+
+        function selectPrivateUser(username) {
+            selectedPrivateUser = username;
+            currentChatTab = 'privado';
+            
+            // Actualizar UI
+            document.getElementById('tabChatGrupal').classList.remove('active');
+            document.getElementById('tabChatPrivado').classList.add('active');
+            
+            var grupalMobile = document.getElementById('tabChatGrupalMobile');
+            var privadoMobile = document.getElementById('tabChatPrivadoMobile');
+            if (grupalMobile) grupalMobile.classList.remove('active');
+            if (privadoMobile) privadoMobile.classList.add('active');
+            
+            renderOnlineUsers();
+            renderChatMessages();
+            
+            // Marcar mensajes como leídos
+            markPrivateMessagesAsRead(username);
+        }
+
+        function getPrivateChatKey(user1, user2) {
+            var users = [user1, user2].sort();
+            return sanitizeKey(users[0]) + '_' + sanitizeKey(users[1]);
+        }
+
+        function renderChatMessages() {
+            var container = document.getElementById('chatMessages');
+            var containerMobile = document.getElementById('chatMessagesMobile');
+            var html = '';
+            
+            if (currentChatTab === 'grupal') {
+                // Chat grupal
+                if (chatMessages.length === 0) {
+                    html = '<p style="color: #999; text-align: center; font-size: 0.9em;">No hay mensajes aún.<br>¡Sé el primero en saludar! 👋</p>';
+                } else {
+                    for (var i = 0; i < chatMessages.length; i++) {
+                        var msg = chatMessages[i];
+                        html += renderSingleMessage(msg);
+                    }
+                }
+            } else {
+                // Chat privado
+                if (!selectedPrivateUser) {
+                    html = '<p style="color: #999; text-align: center; font-size: 0.9em;">Selecciona un agente para chatear</p>';
+                } else {
+                    var chatKey = getPrivateChatKey(currentAgent, selectedPrivateUser);
+                    var messages = [];
+                    
+                    if (privateChats[chatKey]) {
+                        messages = Object.values(privateChats[chatKey]).sort(function(a, b) {
+                            return a.timestamp - b.timestamp;
+                        });
+                    }
+                    
+                    if (messages.length === 0) {
+                        html = '<p style="color: #999; text-align: center; font-size: 0.9em;">Inicia una conversación con ' + selectedPrivateUser + '</p>';
+                    } else {
+                        for (var j = 0; j < messages.length; j++) {
+                            html += renderSingleMessage(messages[j]);
+                        }
+                    }
+                }
+            }
+            
+            if (container) {
+                container.innerHTML = html;
+                container.scrollTop = container.scrollHeight;
+            }
+            if (containerMobile) {
+                containerMobile.innerHTML = html;
+                containerMobile.scrollTop = containerMobile.scrollHeight;
+            }
+        }
+
+        function renderSingleMessage(msg) {
+            var isSent = msg.from === currentAgent;
+            var time = new Date(msg.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            var date = new Date(msg.timestamp).toLocaleDateString('es-ES');
+            var today = new Date().toLocaleDateString('es-ES');
+            var timeDisplay = (date === today) ? time : date + ' ' + time;
+            
+            var html = '<div class="chat-message ' + (isSent ? 'sent' : 'received') + '">';
+            if (!isSent) {
+                html += '<div class="chat-message-sender">' + msg.from + '</div>';
+            }
+            html += '<div class="chat-message-bubble">' + escapeHtml(msg.text) + '</div>';
+            html += '<div class="chat-message-time">' + timeDisplay + '</div>';
+            html += '</div>';
+            
+            return html;
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function sendChatMessage() {
+            var input = document.getElementById('chatInput');
+            var inputMobile = document.getElementById('chatInputMobile');
+            var text = (input && input.value.trim()) || (inputMobile && inputMobile.value.trim());
+            
+            if (!text || !currentAgent) return;
+            
+            var message = {
+                id: Date.now().toString(),
+                from: currentAgent,
+                text: text,
+                timestamp: Date.now()
+            };
+            
+            if (currentChatTab === 'grupal') {
+                // Enviar al chat grupal
+                db.ref('chatGrupal/' + message.id).set(message);
+            } else if (selectedPrivateUser) {
+                // Enviar al chat privado
+                var chatKey = getPrivateChatKey(currentAgent, selectedPrivateUser);
+                message.to = selectedPrivateUser;
+                message.read = false;
+                db.ref('privateChats/' + chatKey + '/' + message.id).set(message);
+            }
+            
+            // Limpiar inputs
+            if (input) input.value = '';
+            if (inputMobile) inputMobile.value = '';
+        }
+
+        function markPrivateMessagesAsRead(otherUser) {
+            if (!db || !currentAgent) return;
+            
+            var chatKey = getPrivateChatKey(currentAgent, otherUser);
+            if (privateChats[chatKey]) {
+                var messages = Object.values(privateChats[chatKey]);
+                for (var i = 0; i < messages.length; i++) {
+                    var msg = messages[i];
+                    if (msg.to === currentAgent && !msg.read) {
+                        db.ref('privateChats/' + chatKey + '/' + msg.id + '/read').set(true);
+                    }
+                }
+            }
+        }
+
+        function updateChatUnreadCount() {
+            if (!currentAgent) return;
+            
+            var unread = 0;
+            
+            // Contar mensajes privados no leídos
+            for (var chatKey in privateChats) {
+                var messages = Object.values(privateChats[chatKey]);
+                for (var i = 0; i < messages.length; i++) {
+                    var msg = messages[i];
+                    if (msg.to === currentAgent && !msg.read) {
+                        unread++;
+                    }
+                }
+            }
+            
+            chatUnreadCount = unread;
+            
+            var badge = document.getElementById('chatUnreadCount');
+            if (badge) {
+                if (unread > 0) {
+                    badge.textContent = unread > 99 ? '99+' : unread;
+                    badge.style.display = 'flex';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        }
+
+        function toggleChatModal() {
+            var modal = document.getElementById('chatModal');
+            if (modal) {
+                modal.classList.toggle('show');
+                if (modal.classList.contains('show')) {
+                    renderChatMessages();
+                    renderOnlineUsers();
+                }
+            }
         }
 
         // ============ SOPORTE TÉCNICO ============
