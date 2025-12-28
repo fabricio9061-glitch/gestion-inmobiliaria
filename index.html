@@ -84,14 +84,25 @@
             border-radius: 8px;
             font-size: 0.9em;
         }
-        .agent-info strong { display: block; }
+        .agent-info .agent-name-line {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: nowrap;
+        }
+        .agent-info .agent-badges-line {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
         .admin-badge {
             background: #dc3545;
             color: white;
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 0.75em;
-            margin-left: 5px;
         }
         .sync-status {
             display: inline-block;
@@ -908,13 +919,18 @@
             .content { grid-template-columns: 1fr; }
             .form-section { border-right: none; border-bottom: 2px solid #e0e0e0; }
             .agent-info { position: static; margin-bottom: 15px; text-align: center; }
+            .agent-info .agent-name-line { justify-content: center; }
+            .agent-info .agent-badges-line { justify-content: center; }
         }
         @media (max-width: 768px) {
             body { padding: 8px; }
             .header { padding: 12px; }
             .header h1 { font-size: 1.2em; }
             .menu-container { top: 8px; right: 8px; }
-            .agent-info { position: static; margin-bottom: 8px; text-align: center; background: rgba(255,255,255,0.15); padding: 6px; font-size: 0.9em; }
+            .agent-info { position: static; margin-bottom: 8px; text-align: center; background: rgba(255,255,255,0.15); padding: 8px 12px; font-size: 0.85em; border-radius: 10px; }
+            .agent-info .agent-name-line { justify-content: center; font-size: 0.95em; }
+            .agent-info .agent-badges-line { justify-content: center; margin-top: 4px; gap: 4px; }
+            .agent-info .agent-badges-line span { font-size: 0.7em !important; padding: 2px 6px !important; }
             .form-section, .stats-section { padding: 12px; }
             .form-group input, .form-group select, .form-group textarea { padding: 12px; font-size: 16px; }
             .btn-group { flex-direction: column; gap: 8px; }
@@ -946,6 +962,9 @@
             .header { padding: 10px; }
             .header h1 { font-size: 1.1em; }
             .container { border-radius: 10px; }
+            .agent-info { padding: 6px 10px; font-size: 0.8em; }
+            .agent-info .agent-name-line { font-size: 0.9em; }
+            .agent-info .agent-badges-line span { font-size: 0.65em !important; }
             .form-section, .stats-section { padding: 10px; }
             .client-card { margin-bottom: 10px; }
             .stats-card { padding: 12px; }
@@ -1209,11 +1228,15 @@
         <div class="container">
             <div class="header">
                 <div class="agent-info">
-                    <strong>👤 Agente:</strong>
-                    <span id="currentAgentDisplay"></span>
-                    <span id="adminBadge" class="admin-badge" style="display: none;">👑 ADMIN</span>
-                    <span id="oficinaBadge" style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 5px; display: none;"></span>
-                    <span id="syncStatus" class="sync-status sync-online">🟢 En línea</span>
+                    <div class="agent-name-line">
+                        <strong>👤 Agente:</strong>
+                        <span id="currentAgentDisplay"></span>
+                    </div>
+                    <div class="agent-badges-line">
+                        <span id="adminBadge" class="admin-badge" style="display: none;">👑 ADMIN</span>
+                        <span id="oficinaBadge" style="background: #6c757d; color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75em; display: none;"></span>
+                        <span id="syncStatus" class="sync-status sync-online">🟢 En línea</span>
+                    </div>
                 </div>
                 <h1>🏠 Gestión de Clientes Inmobiliarios</h1>
                 <p> Sistema de registro y seguimiento por etapas</p>
@@ -4396,7 +4419,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.7';
+        var APP_VERSION = '2.6.8';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4424,7 +4447,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.7 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.6.8 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
