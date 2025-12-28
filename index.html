@@ -4648,6 +4648,162 @@
                 y += 60;
             }
             
+            // Sección de Análisis y Recomendaciones
+            if (y > 200) {
+                doc.addPage();
+                y = 20;
+            }
+            
+            doc.setFillColor(255, 224, 178);
+            doc.rect(10, y, 190, 8, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text('ANALISIS Y RECOMENDACIONES', 15, y + 6);
+            y += 15;
+            
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            
+            if (reportarTodos) {
+                // Análisis para TODOS los agentes
+                var agentesExcelentes = reportData.filter(function(a) { return a.stats.score >= 100; }).length;
+                var agentesBuenos = reportData.filter(function(a) { return a.stats.score >= 50 && a.stats.score < 100; }).length;
+                var agentesRegulares = reportData.filter(function(a) { return a.stats.score >= 20 && a.stats.score < 50; }).length;
+                var agentesBajos = reportData.filter(function(a) { return a.stats.score < 20; }).length;
+                
+                doc.setFont('helvetica', 'bold');
+                doc.text('Distribucion del Equipo:', 15, y);
+                y += 7;
+                doc.setFont('helvetica', 'normal');
+                
+                doc.setTextColor(34, 139, 34);
+                doc.text('- Rendimiento Excelente: ' + agentesExcelentes + ' agente(s)', 20, y);
+                y += 6;
+                doc.setTextColor(0, 128, 0);
+                doc.text('- Rendimiento Bueno: ' + agentesBuenos + ' agente(s)', 20, y);
+                y += 6;
+                doc.setTextColor(255, 165, 0);
+                doc.text('- Rendimiento Regular: ' + agentesRegulares + ' agente(s)', 20, y);
+                y += 6;
+                doc.setTextColor(220, 53, 69);
+                doc.text('- Necesitan Mejorar: ' + agentesBajos + ' agente(s)', 20, y);
+                y += 10;
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Recomendaciones Generales:', 15, y);
+                y += 7;
+                doc.setFont('helvetica', 'normal');
+                
+                if (agentesBajos > 0) {
+                    doc.text('- Programar capacitacion para agentes con bajo rendimiento.', 20, y);
+                    y += 6;
+                }
+                if (totalLlamadas < reportData.length * 5) {
+                    doc.text('- El equipo necesita aumentar el volumen de llamadas de prospeccion.', 20, y);
+                    y += 6;
+                }
+                if (totalTasaciones === 0) {
+                    doc.text('- Ninguna tasacion entregada este mes. Revisar proceso de conversion.', 20, y);
+                    y += 6;
+                }
+                if (totalVentas + totalAlquileres === 0) {
+                    doc.text('- No se cerraron operaciones. Enfocarse en clientes calificados.', 20, y);
+                    y += 6;
+                } else if (totalVentas + totalAlquileres >= 3) {
+                    doc.text('- Excelente mes! Documentar las estrategias exitosas del equipo.', 20, y);
+                    y += 6;
+                }
+                if (agentesExcelentes > 0) {
+                    doc.text('- Reconocer publicamente a los agentes con mejor rendimiento.', 20, y);
+                    y += 6;
+                }
+                doc.text('- Realizar reunion semanal de seguimiento de objetivos.', 20, y);
+                y += 6;
+                
+            } else {
+                // Análisis para UN agente específico
+                var agent = reportData[0];
+                
+                doc.setFont('helvetica', 'bold');
+                doc.text('Evaluacion de ' + agent.nombre + ':', 15, y);
+                y += 7;
+                doc.setFont('helvetica', 'normal');
+                
+                // Estado general
+                doc.setTextColor(agent.rendimientoColor[0], agent.rendimientoColor[1], agent.rendimientoColor[2]);
+                doc.text('Estado actual: ' + agent.rendimiento + ' (' + agent.stats.score + ' puntos)', 20, y);
+                y += 8;
+                
+                doc.setTextColor(0, 0, 0);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Fortalezas:', 15, y);
+                y += 6;
+                doc.setFont('helvetica', 'normal');
+                
+                var fortalezas = [];
+                if (agent.stats.llamadas >= 10) fortalezas.push('Buen volumen de llamadas (' + agent.stats.llamadas + ')');
+                if (agent.stats.tasaciones >= 3) fortalezas.push('Buena conversion a tasaciones (' + agent.stats.tasaciones + ')');
+                if (agent.stats.exclusivas >= 2) fortalezas.push('Obtiene exclusivas (' + agent.stats.exclusivas + ')');
+                if (agent.stats.ventas >= 1) fortalezas.push('Cierra ventas (' + agent.stats.ventas + ')');
+                if (agent.stats.alquileres >= 1) fortalezas.push('Cierra alquileres (' + agent.stats.alquileres + ')');
+                if (agent.tasaConversion >= 10) fortalezas.push('Buena tasa de conversion (' + agent.tasaConversion + '%)');
+                
+                if (fortalezas.length === 0) {
+                    doc.text('- En desarrollo, necesita enfocarse en mejorar metricas.', 20, y);
+                    y += 6;
+                } else {
+                    for (var f = 0; f < Math.min(3, fortalezas.length); f++) {
+                        doc.text('- ' + fortalezas[f], 20, y);
+                        y += 6;
+                    }
+                }
+                
+                y += 3;
+                doc.setFont('helvetica', 'bold');
+                doc.text('Areas de Mejora:', 15, y);
+                y += 6;
+                doc.setFont('helvetica', 'normal');
+                
+                for (var s = 0; s < agent.sugerencias.length; s++) {
+                    doc.text('- ' + agent.sugerencias[s].replace('• ', ''), 20, y);
+                    y += 6;
+                }
+                
+                y += 3;
+                doc.setFont('helvetica', 'bold');
+                doc.text('Plan de Accion Sugerido:', 15, y);
+                y += 6;
+                doc.setFont('helvetica', 'normal');
+                
+                if (agent.stats.score < 20) {
+                    doc.text('1. Establecer meta de minimo 10 llamadas por semana.', 20, y);
+                    y += 6;
+                    doc.text('2. Acompanar en visitas con agentes experimentados.', 20, y);
+                    y += 6;
+                    doc.text('3. Revisar y practicar guion de llamadas.', 20, y);
+                } else if (agent.stats.score < 50) {
+                    doc.text('1. Aumentar seguimiento a clientes existentes.', 20, y);
+                    y += 6;
+                    doc.text('2. Mejorar cierre de tasaciones a exclusivas.', 20, y);
+                    y += 6;
+                    doc.text('3. Establecer objetivos semanales medibles.', 20, y);
+                } else if (agent.stats.score < 100) {
+                    doc.text('1. Mantener consistencia en las actividades.', 20, y);
+                    y += 6;
+                    doc.text('2. Enfocarse en cerrar operaciones pendientes.', 20, y);
+                    y += 6;
+                    doc.text('3. Compartir mejores practicas con el equipo.', 20, y);
+                } else {
+                    doc.text('1. Continuar con las estrategias actuales.', 20, y);
+                    y += 6;
+                    doc.text('2. Mentorear a agentes con menor rendimiento.', 20, y);
+                    y += 6;
+                    doc.text('3. Documentar tecnicas exitosas para el equipo.', 20, y);
+                }
+            }
+            
             // Footer
             if (y > 270) {
                 doc.addPage();
@@ -4862,41 +5018,120 @@
             }
             
             // Análisis y Recomendaciones
-            if (y > 220) { doc.addPage(); y = 20; }
+            if (y > 200) { doc.addPage(); y = 20; }
             doc.setFillColor(255, 224, 178);
             doc.rect(10, y, 190, 8, 'F');
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.text('ANALISIS Y RECOMENDACIONES', 15, y + 6);
-            y += 12;
+            y += 15;
             
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(9);
             
-            if (ventasMes.length + alquileresMes.length === 0) {
+            // Evaluación general del mes
+            doc.setFont('helvetica', 'bold');
+            doc.text('Evaluacion del Mes:', 15, y);
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            
+            var totalOps = ventasMes.length + alquileresMes.length;
+            
+            if (totalOps === 0) {
                 doc.setTextColor(220, 53, 69);
-                doc.text('No se cerraron operaciones este mes.', 15, y);
+                doc.text('- No se cerraron operaciones este mes. Situacion critica.', 20, y);
                 y += 6;
-                doc.setTextColor(0, 0, 0);
-                doc.text('Recomendacion: Revisar el pipeline de clientes y aumentar el seguimiento a prospectos calificados.', 15, y);
-                y += 8;
-            } else if (ventasMes.length + alquileresMes.length >= 3) {
+            } else if (totalOps === 1) {
+                doc.setTextColor(255, 165, 0);
+                doc.text('- Se cerro 1 operacion. Rendimiento bajo, hay que mejorar.', 20, y);
+                y += 6;
+            } else if (totalOps === 2) {
+                doc.setTextColor(0, 128, 0);
+                doc.text('- Se cerraron 2 operaciones. Rendimiento aceptable.', 20, y);
+                y += 6;
+            } else {
                 doc.setTextColor(34, 139, 34);
-                doc.text('Excelente mes! Se cerraron ' + (ventasMes.length + alquileresMes.length) + ' operaciones.', 15, y);
+                doc.text('- Se cerraron ' + totalOps + ' operaciones. Excelente rendimiento!', 20, y);
                 y += 6;
-                doc.setTextColor(0, 0, 0);
-                doc.text('Recomendacion: Mantener las estrategias actuales y documentar las mejores practicas.', 15, y);
-                y += 8;
             }
             
-            if (llamadasMes.length < 10) {
-                doc.setTextColor(255, 165, 0);
-                doc.text('El volumen de llamadas es bajo (' + llamadasMes.length + ').', 15, y);
+            doc.setTextColor(0, 0, 0);
+            
+            if (clientesMes.length === 0) {
+                doc.text('- No se captaron clientes nuevos este mes.', 20, y);
                 y += 6;
-                doc.setTextColor(0, 0, 0);
-                doc.text('Recomendacion: Incrementar la prospeccion activa.', 15, y);
-                y += 8;
+            } else if (clientesMes.length < 5) {
+                doc.text('- Se captaron ' + clientesMes.length + ' clientes nuevos. Volumen bajo.', 20, y);
+                y += 6;
+            } else {
+                doc.text('- Se captaron ' + clientesMes.length + ' clientes nuevos. Buen volumen de prospeccion.', 20, y);
+                y += 6;
             }
+            
+            // Indicadores específicos
+            if (llamadasMes.length < 10) {
+                doc.text('- Volumen de llamadas bajo (' + llamadasMes.length + '). Necesita aumentar.', 20, y);
+                y += 6;
+            } else if (llamadasMes.length >= 30) {
+                doc.text('- Excelente volumen de llamadas (' + llamadasMes.length + ').', 20, y);
+                y += 6;
+            } else {
+                doc.text('- Volumen de llamadas aceptable (' + llamadasMes.length + ').', 20, y);
+                y += 6;
+            }
+            
+            if (tasacionesMes.length === 0 && llamadasMes.length > 10) {
+                doc.text('- Muchas llamadas pero sin tasaciones. Revisar calidad de prospeccion.', 20, y);
+                y += 6;
+            }
+            
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Recomendaciones:', 15, y);
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            
+            if (totalOps === 0) {
+                doc.text('1. Revisar urgentemente el pipeline de clientes activos.', 20, y);
+                y += 6;
+                doc.text('2. Aumentar seguimiento a prospectos con tasacion entregada.', 20, y);
+                y += 6;
+                doc.text('3. Realizar reunion de equipo para identificar obstaculos.', 20, y);
+                y += 6;
+            } else if (totalOps < 3) {
+                doc.text('1. Incrementar el volumen de llamadas de prospeccion.', 20, y);
+                y += 6;
+                doc.text('2. Mejorar la conversion de tasaciones a exclusivas.', 20, y);
+                y += 6;
+                doc.text('3. Dar seguimiento mas frecuente a clientes activos.', 20, y);
+                y += 6;
+            } else {
+                doc.text('1. Mantener las estrategias actuales que estan funcionando.', 20, y);
+                y += 6;
+                doc.text('2. Documentar las mejores practicas del mes.', 20, y);
+                y += 6;
+                doc.text('3. Reconocer el esfuerzo del equipo y celebrar los logros.', 20, y);
+                y += 6;
+            }
+            
+            if (clientesMes.length < 5) {
+                doc.text('4. Intensificar estrategias de captacion de nuevos clientes.', 20, y);
+                y += 6;
+            }
+            
+            // Objetivo sugerido
+            y += 5;
+            doc.setFont('helvetica', 'bold');
+            doc.text('Objetivo para el proximo mes:', 15, y);
+            y += 7;
+            doc.setFont('helvetica', 'normal');
+            var objetivoOps = Math.max(3, totalOps + 1);
+            var objetivoClientes = Math.max(10, clientesMes.length + 5);
+            doc.text('- Cerrar al menos ' + objetivoOps + ' operaciones.', 20, y);
+            y += 6;
+            doc.text('- Captar al menos ' + objetivoClientes + ' clientes nuevos.', 20, y);
+            y += 6;
+            doc.text('- Mantener un minimo de 20 llamadas semanales por agente.', 20, y);
             
             // Footer
             doc.setFillColor(210, 169, 77);
@@ -4926,7 +5161,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.4';
+        var APP_VERSION = '2.7.5';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4954,7 +5189,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.4 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.5 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
