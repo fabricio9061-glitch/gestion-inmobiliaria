@@ -827,6 +827,8 @@
             flex: 1;
             min-width: 0;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         .top-name {
             font-weight: 600;
@@ -842,6 +844,11 @@
             font-size: 0.75em;
             color: #666;
             margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 18px;
+            line-height: 18px;
         }
         .top-agent.bronze .top-stats {
             color: #f0e6d3;
@@ -945,7 +952,8 @@
             .top-agent { padding: 8px 10px; gap: 8px; }
             .top-position { font-size: 1.2em; min-width: 25px; }
             .top-score { font-size: 0.95em; }
-            .top-stats { font-size: 0.7em; }
+            .top-stats { font-size: 0.7em; white-space: nowrap; min-height: 16px; line-height: 16px; }
+            .top-name { font-size: 0.95em; }
             .top-remove-btn { width: 20px; height: 20px; min-height: 20px; font-size: 12px; }
             .contact-btn { padding: 10px 14px; min-height: 44px; }
             .client-card-compact { padding: 10px; }
@@ -968,8 +976,11 @@
             .form-section, .stats-section { padding: 10px; }
             .client-card { margin-bottom: 10px; }
             .stats-card { padding: 12px; }
-            .top-stats { font-size: 0.65em; }
-            .top-name { font-size: 0.9em; }
+            .top-stats { font-size: 0.65em; white-space: nowrap; min-height: 14px; line-height: 14px; }
+            .top-name { font-size: 0.85em; }
+            .top-agent { padding: 6px 8px; gap: 6px; }
+            .top-position { font-size: 1.1em; min-width: 22px; }
+            .top-score { font-size: 0.85em; }
             .client-compact-stage { font-size: 0.65em; }
             .client-name { font-size: 0.95em; }
             .type-badge, .agent-badge { padding: 2px 5px; font-size: 0.6em; }
@@ -4419,7 +4430,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.8';
+        var APP_VERSION = '2.6.9';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4447,7 +4458,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.8 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.6.9 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
