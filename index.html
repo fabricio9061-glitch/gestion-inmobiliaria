@@ -2178,7 +2178,8 @@
                 fechaCreacion: new Date().toISOString(),
                 agente: currentAgent,
                 seguimiento: createEmptySeguimiento(),
-                venta: null
+                venta: null,
+                foto: null
             };
 
             if (editingIndex === -1) {
@@ -2193,6 +2194,7 @@
                 clientData.ultimoContacto = existing.ultimoContacto;
                 clientData.fechaCreacion = existing.fechaCreacion;
                 clientData.agente = existing.agente;
+                clientData.foto = existing.foto || null;
                 clients[editingIndex] = clientData;
                 editingIndex = -1;
             }
@@ -2205,7 +2207,7 @@
             if (isAdmin) populateAgentSelector();
             
             // Cerrar el formulario después de guardar
-            toggleClientForm();
+            closeClientForm();
         }
 
         function createEmptySeguimiento() {
@@ -2944,13 +2946,20 @@
         function editClient(index) {
             editingIndex = index;
             var client = clients[index];
-            document.getElementById('nombre').value = client.nombre;
-            document.getElementById('telefono').value = client.telefono;
-            document.getElementById('tipoOperacion').value = client.tipoOperacion || 'venta';
-            document.getElementById('direccion').value = client.direccion;
+            document.getElementById('nombre').value = client.nombre || '';
+            document.getElementById('telefono').value = client.telefono || '';
+            
+            // Asegurar que tipoOperacion sea válido
+            var tipoOp = client.tipoOperacion;
+            if (tipoOp !== 'venta' && tipoOp !== 'alquiler') {
+                tipoOp = 'venta';
+            }
+            document.getElementById('tipoOperacion').value = tipoOp;
+            
+            document.getElementById('direccion').value = client.direccion || '';
             document.getElementById('linkPropiedad').value = client.linkPropiedad || '';
-            document.getElementById('fechaLlamada').value = client.fechaLlamada;
-            document.getElementById('nota').value = client.nota;
+            document.getElementById('fechaLlamada').value = client.fechaLlamada || '';
+            document.getElementById('nota').value = client.nota || '';
             
             // Abrir el formulario si está cerrado
             openFormForEdit();
@@ -2999,6 +3008,15 @@
             btn.innerHTML = '✖️ Cerrar Formulario';
             btn.classList.remove('btn-primary');
             btn.classList.add('btn-secondary');
+        }
+
+        function closeClientForm() {
+            var container = document.getElementById('clientFormContainer');
+            var btn = document.getElementById('toggleFormBtn');
+            container.style.display = 'none';
+            btn.innerHTML = '➕ Añadir Cliente';
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
         }
 
         // ============ STATS ============
