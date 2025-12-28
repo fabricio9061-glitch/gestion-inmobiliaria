@@ -391,24 +391,37 @@
         .client-compact-info {
             flex: 1;
             min-width: 0;
+            overflow: hidden;
         }
         .client-compact-header {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            overflow: hidden;
         }
         .client-name { 
             font-size: 1.1em; 
             font-weight: 700; 
             color: #333; 
             cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 1;
+            min-width: 0;
         }
         .client-name:hover { color: #b6802d; }
         .client-compact-stage {
             font-size: 0.8em;
             color: #666;
             margin-top: 3px;
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            overflow: hidden;
+            min-height: 24px;
         }
         .client-expand-icon {
             font-size: 1.2em;
@@ -461,15 +474,17 @@
         }
         .type-badge, .agent-badge {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 3px 10px;
             border-radius: 15px;
-            font-size: 0.8em;
+            font-size: 0.75em;
             font-weight: 600;
-            margin-left: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .type-venta { background: #4caf50; color: white; }
         .type-alquiler { background: #2196f3; color: white; }
-        .agent-badge { background: #6c757d; color: white; font-size: 0.75em; }
+        .agent-badge { background: #6c757d; color: white; font-size: 0.7em; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
         .stage-inicial { background: #f2d26e; color: #5a4a1f; }
         .stage-respuesta { background: #e2bd5d; color: #4a3d15; }
         .stage-pretasacion { background: #d2a94d; color: #3a2f0f; }
@@ -917,7 +932,13 @@
             .top-stats { font-size: 0.7em; }
             .top-remove-btn { width: 20px; height: 20px; min-height: 20px; font-size: 12px; }
             .contact-btn { padding: 10px 14px; min-height: 44px; }
-            .client-card-compact { padding: 12px; }
+            .client-card-compact { padding: 10px; }
+            .client-compact-header { gap: 5px; }
+            .client-compact-stage { font-size: 0.7em; min-height: 22px; }
+            .client-name { font-size: 1em; }
+            .type-badge, .agent-badge { padding: 2px 6px; font-size: 0.65em; margin-left: 5px; }
+            .agent-badge { max-width: 80px; }
+            .stage-badge { padding: 2px 6px !important; font-size: 0.65em !important; }
             .support-chat { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
         }
         @media (max-width: 480px) {
@@ -930,6 +951,10 @@
             .stats-card { padding: 12px; }
             .top-stats { font-size: 0.65em; }
             .top-name { font-size: 0.9em; }
+            .client-compact-stage { font-size: 0.65em; }
+            .client-name { font-size: 0.95em; }
+            .type-badge, .agent-badge { padding: 2px 5px; font-size: 0.6em; }
+            .agent-badge { max-width: 70px; }
         }
         /* Preferencias de movimiento reducido */
         @media (prefers-reduced-motion: reduce) {
@@ -3202,6 +3227,12 @@
             }
             
             var client = clients[currentClientIndex];
+            
+            // Asegurar que seguimiento exista
+            if (!client.seguimiento) {
+                client.seguimiento = {};
+            }
+            
             client.venta = { 
                 precio: document.getElementById('precioVenta').value, 
                 moneda: moneda,
@@ -3220,6 +3251,7 @@
             displayClients();
             updateArchivedCount();
             updateStats();
+            updateTopAgents();
             populateMonthSelector();
             if (isAdmin) populateAgentSelector();
             closeSaleModal();
@@ -4364,7 +4396,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.6';
+        var APP_VERSION = '2.6.7';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4392,7 +4424,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.6 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.6.7 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
