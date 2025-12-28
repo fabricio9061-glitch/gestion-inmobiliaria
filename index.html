@@ -826,7 +826,6 @@
         .top-info {
             flex: 1;
             min-width: 0;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
@@ -841,14 +840,12 @@
             color: white;
         }
         .top-stats {
-            font-size: 0.75em;
+            font-size: 0.7em;
             color: #666;
             margin-top: 2px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            min-height: 18px;
-            line-height: 18px;
+            min-height: 16px;
+            line-height: 16px;
         }
         .top-agent.bronze .top-stats {
             color: #f0e6d3;
@@ -952,7 +949,7 @@
             .top-agent { padding: 8px 10px; gap: 8px; }
             .top-position { font-size: 1.2em; min-width: 25px; }
             .top-score { font-size: 0.95em; }
-            .top-stats { font-size: 0.7em; white-space: nowrap; min-height: 16px; line-height: 16px; }
+            .top-stats { font-size: 0.65em; white-space: nowrap; min-height: 14px; line-height: 14px; }
             .top-name { font-size: 0.95em; }
             .top-remove-btn { width: 20px; height: 20px; min-height: 20px; font-size: 12px; }
             .contact-btn { padding: 10px 14px; min-height: 44px; }
@@ -3636,7 +3633,7 @@
                     '<div class="top-position">' + posEmoji + '</div>' +
                     '<div class="top-info">' +
                         '<div class="top-name">' + agent.name + '</div>' +
-                        '<div class="top-stats">📞' + agent.stats.llamadas + ' | 📋' + agent.stats.tasaciones + ' | ⭐' + agent.stats.exclusivas + ' | 🏠' + agent.stats.ventas + ' | 🔑' + agent.stats.alquileres + '</div>' +
+                        '<div class="top-stats">📞' + agent.stats.llamadas + '|📋' + agent.stats.tasaciones + '|⭐' + agent.stats.exclusivas + '|🏠' + agent.stats.ventas + '|🔑' + agent.stats.alquileres + '</div>' +
                     '</div>' +
                     '<div class="top-score">' + agent.stats.score + ' pts</div>' +
                 '</div>';
@@ -4430,7 +4427,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.9';
+        var APP_VERSION = '2.7.0';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4458,7 +4455,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.9 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.0 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
