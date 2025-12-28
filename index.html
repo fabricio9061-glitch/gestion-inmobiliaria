@@ -4146,12 +4146,10 @@
                 html += '<td style="padding: 12px; font-size: 0.9em;">' + oficinaNombre + '</td>';
                 html += '<td style="padding: 12px; text-align: center;">';
                 
-                // No permitir editar/eliminar al ADMIN principal
+                // Permitir editar a todos, pero no eliminar al ADMIN
+                html += '<button onclick="editUser(' + userIndex + ')" style="background: #ffc107; color: #333; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px;">✏️</button>';
                 if (!isAdminUser) {
-                    html += '<button onclick="editUser(' + userIndex + ')" style="background: #ffc107; color: #333; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px;">✏️</button>';
                     html += '<button onclick="deleteUser(' + userIndex + ')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">🗑️</button>';
-                } else {
-                    html += '<span style="color: #999; font-size: 0.8em;">Protegido</span>';
                 }
                 
                 html += '</td>';
@@ -4169,12 +4167,6 @@
         function editUser(index) {
             var user = users[index];
             if (!user) return;
-            
-            // No permitir editar al ADMIN
-            if (user.username === ADMIN_USER) {
-                alert('No puedes editar al administrador principal.');
-                return;
-            }
             
             document.getElementById('editUserIndex').value = index;
             document.getElementById('editUserName').value = user.username;
@@ -4323,11 +4315,10 @@
                 html += '<td style="padding: 12px; text-align: center;">' + data.alquileres + '</td>';
                 html += '<td style="padding: 12px; text-align: center;">';
                 
+                // Permitir reasignar a todos, pero no eliminar al ADMIN
+                html += '<button onclick="reassignAgentClients(\'' + agent.replace(/'/g, "\\'") + '\')" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px; font-size: 0.85em;">🔄 Reasignar</button>';
                 if (!isAdminAgent) {
-                    html += '<button onclick="reassignAgentClients(\'' + agent.replace(/'/g, "\\'") + '\')" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px; font-size: 0.85em;">🔄 Reasignar</button>';
                     html += '<button onclick="deleteAgentFromTop(\'' + agent.replace(/'/g, "\\'") + '\')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85em;">🗑️ Eliminar</button>';
-                } else {
-                    html += '<span style="color: #999; font-size: 0.85em;">Protegido</span>';
                 }
                 
                 html += '</td>';
@@ -4427,7 +4418,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.0';
+        var APP_VERSION = '2.7.1';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4455,7 +4446,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.0 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.1 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
