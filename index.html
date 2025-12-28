@@ -2644,19 +2644,60 @@
                 // Badge del agente (solo admin)
                 var agentBadge = (isAdmin && filter === 'all') ? '<span class="agent-badge" style="font-size: 0.75em;">' + (client.agente || 'Sin agente') + '</span>' : '';
                 
-                // Contador de progreso del cliente
+                // Contador de progreso del cliente (solo mes actual, igual que el TOP)
                 var s = client.seguimiento || {};
-                var llamadasCount = client.cantidadLlamadas || 0;
-                var operacionCount = s.vendida ? 1 : 0;
+                var now = new Date();
+                var currentMonth = now.getMonth();
+                var currentYear = now.getFullYear();
+                
+                // Contar llamadas del mes actual
+                var llamadasCount = 0;
+                if (client.historialLlamadas && client.historialLlamadas.length > 0) {
+                    for (var k = 0; k < client.historialLlamadas.length; k++) {
+                        var llamada = client.historialLlamadas[k];
+                        if (llamada.fecha) {
+                            var fechaLlamada = new Date(llamada.fecha);
+                            if (fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
+                                llamadasCount++;
+                            }
+                        }
+                    }
+                }
+                
+                // Contar operación cerrada del mes actual
+                var operacionCount = 0;
+                if (s.vendida && client.venta && client.venta.fecha) {
+                    var fechaVenta = new Date(client.venta.fecha);
+                    if (fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
+                        operacionCount = 1;
+                    }
+                }
                 
                 var statsCounter = '';
                 if (client.tipoOperacion === 'alquiler') {
                     // Alquileres: solo llamadas y alquiler
                     statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 🔑' + operacionCount + '</span>';
                 } else {
-                    // Ventas: llamadas, tasación, exclusiva, venta
-                    var tasacionCount = s.tasacionEntregada === true ? 1 : 0;
-                    var exclusivaCount = s.tipoExclusiva ? 1 : 0;
+                    // Ventas: llamadas, tasación, exclusiva, venta (del mes actual)
+                    var tasacionCount = 0;
+                    if (s.tasacionEntregada === true && s.fechaEntrega) {
+                        var fechaTas = new Date(s.fechaEntrega);
+                        if (fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
+                            tasacionCount = 1;
+                        }
+                    }
+                    
+                    var exclusivaCount = 0;
+                    if (s.tipoExclusiva && s.tipoExclusiva !== 'No Exclusiva') {
+                        var fechaRef = s.fechaEntrega || client.fechaCreacion;
+                        if (fechaRef) {
+                            var fechaExc = new Date(fechaRef);
+                            if (fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
+                                exclusivaCount = 1;
+                            }
+                        }
+                    }
+                    
                     statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📋' + tasacionCount + ' | ⭐' + exclusivaCount + ' | 🏠' + operacionCount + '</span>';
                 }
                 
@@ -4323,7 +4364,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.5';
+        var APP_VERSION = '2.6.6';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4351,7 +4392,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.5 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.6.6 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
