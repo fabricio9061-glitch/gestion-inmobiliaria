@@ -1269,6 +1269,17 @@
                         <button class="dropdown-item" onclick="syncNow(); closeMenu();">
                             🔄 Sincronizar Ahora
                         </button>
+                        <!-- Opciones de Reportes (Admin y Líderes) -->
+                        <div id="reportMenuOptions" style="display: none;">
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 8px 0;">
+                            <div style="padding: 5px 15px; font-size: 0.75em; color: #888; text-transform: uppercase;">📊 Reportes</div>
+                            <button class="dropdown-item" onclick="generateAgentReport(); closeMenu();">
+                                📈 Reporte de Agentes
+                            </button>
+                            <button class="dropdown-item" onclick="generateMonthlyReport(); closeMenu();">
+                                📅 Reporte Mensual
+                            </button>
+                        </div>
                         <!-- Opciones de Sistema Técnico -->
                         <div id="stMenuOptions" style="display: none;">
                             <hr style="border: none; border-top: 1px solid #ddd; margin: 8px 0;">
@@ -2386,6 +2397,17 @@
                 document.getElementById('supportBubble').style.display = 'flex';
                 document.getElementById('supportInboxBtn').style.display = 'none';
                 document.getElementById('stMenuOptions').style.display = 'none';
+            }
+            
+            // Mostrar menú de reportes para Admin y Líderes
+            var isLider = false;
+            if (currentUserData && currentUserData.oficina && OFICINAS[currentUserData.oficina]) {
+                isLider = (currentAgent === OFICINAS[currentUserData.oficina].lider);
+            }
+            if (isAdmin || isLider) {
+                document.getElementById('reportMenuOptions').style.display = 'block';
+            } else {
+                document.getElementById('reportMenuOptions').style.display = 'none';
             }
             
             migrateOldData();
@@ -4401,6 +4423,334 @@
             alert('✅ Agente "' + agentName + '" y sus clientes han sido eliminados.');
         }
 
+        // ============ REPORTES ============
+        function generateAgentReport() {
+            var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            var now = new Date();
+            var mesActual = meses[now.getMonth()];
+            var anioActual = now.getFullYear();
+            
+            var agents = getUniqueAgents();
+            var reportData = [];
+            
+            // Recopilar datos de cada agente
+            for (var i = 0; i < agents.length; i++) {
+                var agentName = agents[i];
+                var stats = getAgentScore(agentName);
+                var agentClients = clients.filter(function(c) { return c.agente === agentName; });
+                var clientesActivos = agentClients.filter(function(c) { return !c.archivado; }).length;
+                var clientesArchivados = agentClients.filter(function(c) { return c.archivado; }).length;
+                var totalClientes = agentClients.length;
+                
+                // Calcular tasa de conversión
+                var conversiones = stats.ventas + stats.alquileres;
+                var tasaConversion = totalClientes > 0 ? ((conversiones / totalClientes) * 100).toFixed(1) : 0;
+                
+                // Análisis de rendimiento
+                var rendimiento = '';
+                var sugerencias = [];
+                
+                if (stats.score >= 100) {
+                    rendimiento = '🌟 EXCELENTE';
+                } else if (stats.score >= 50) {
+                    rendimiento = '✅ BUENO';
+                } else if (stats.score >= 20) {
+                    rendimiento = '⚠️ REGULAR';
+                } else {
+                    rendimiento = '🔴 NECESITA MEJORAR';
+                }
+                
+                // Sugerencias personalizadas
+                if (stats.llamadas < 5) {
+                    sugerencias.push('• Aumentar volumen de llamadas (actual: ' + stats.llamadas + ')');
+                }
+                if (stats.tasaciones === 0 && stats.llamadas > 5) {
+                    sugerencias.push('• Mejorar conversión de llamadas a tasaciones');
+                }
+                if (stats.exclusivas === 0 && stats.tasaciones > 0) {
+                    sugerencias.push('• Trabajar en obtener más exclusivas');
+                }
+                if (stats.ventas === 0 && stats.alquileres === 0 && stats.exclusivas > 0) {
+                    sugerencias.push('• Enfocarse en cerrar operaciones');
+                }
+                if (clientesActivos > 20) {
+                    sugerencias.push('• Revisar clientes activos, considerar archivar inactivos');
+                }
+                if (sugerencias.length === 0) {
+                    sugerencias.push('• ¡Mantener el excelente trabajo!');
+                }
+                
+                reportData.push({
+                    nombre: agentName,
+                    stats: stats,
+                    totalClientes: totalClientes,
+                    clientesActivos: clientesActivos,
+                    clientesArchivados: clientesArchivados,
+                    tasaConversion: tasaConversion,
+                    rendimiento: rendimiento,
+                    sugerencias: sugerencias
+                });
+            }
+            
+            // Ordenar por puntuación
+            reportData.sort(function(a, b) { return b.stats.score - a.stats.score; });
+            
+            // Generar contenido del reporte
+            var content = '═══════════════════════════════════════════════════════════════\n';
+            content += '              REPORTE DE RENDIMIENTO DE AGENTES\n';
+            content += '                    ' + mesActual + ' ' + anioActual + '\n';
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += 'Generado: ' + now.toLocaleString('es-ES') + '\n';
+            content += 'Empresa: Imperium Harmony\n';
+            content += '═══════════════════════════════════════════════════════════════\n\n';
+            
+            // Resumen ejecutivo
+            var totalVentas = reportData.reduce(function(sum, a) { return sum + a.stats.ventas; }, 0);
+            var totalAlquileres = reportData.reduce(function(sum, a) { return sum + a.stats.alquileres; }, 0);
+            var totalLlamadas = reportData.reduce(function(sum, a) { return sum + a.stats.llamadas; }, 0);
+            var totalTasaciones = reportData.reduce(function(sum, a) { return sum + a.stats.tasaciones; }, 0);
+            var totalExclusivas = reportData.reduce(function(sum, a) { return sum + a.stats.exclusivas; }, 0);
+            
+            content += '📊 RESUMEN EJECUTIVO\n';
+            content += '───────────────────────────────────────────────────────────────\n';
+            content += 'Total de Agentes: ' + reportData.length + '\n';
+            content += 'Total Llamadas: ' + totalLlamadas + ' (📞)\n';
+            content += 'Total Tasaciones: ' + totalTasaciones + ' (📋)\n';
+            content += 'Total Exclusivas: ' + totalExclusivas + ' (⭐)\n';
+            content += 'Total Ventas: ' + totalVentas + ' (🏠)\n';
+            content += 'Total Alquileres: ' + totalAlquileres + ' (🔑)\n';
+            content += 'Operaciones Cerradas: ' + (totalVentas + totalAlquileres) + '\n\n';
+            
+            // Ranking TOP 3
+            content += '🏆 TOP 3 AGENTES DEL MES\n';
+            content += '───────────────────────────────────────────────────────────────\n';
+            for (var j = 0; j < Math.min(3, reportData.length); j++) {
+                var medal = j === 0 ? '🥇' : (j === 1 ? '🥈' : '🥉');
+                content += medal + ' ' + reportData[j].nombre + ' - ' + reportData[j].stats.score + ' pts\n';
+            }
+            content += '\n';
+            
+            // Detalle por agente
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += '              DETALLE POR AGENTE\n';
+            content += '═══════════════════════════════════════════════════════════════\n\n';
+            
+            for (var k = 0; k < reportData.length; k++) {
+                var agent = reportData[k];
+                content += '┌─────────────────────────────────────────────────────────────┐\n';
+                content += '│ ' + (k + 1) + '. ' + agent.nombre + '\n';
+                content += '├─────────────────────────────────────────────────────────────┤\n';
+                content += '│ Rendimiento: ' + agent.rendimiento + ' (' + agent.stats.score + ' pts)\n';
+                content += '│\n';
+                content += '│ 📊 ESTADÍSTICAS DEL MES:\n';
+                content += '│    📞 Llamadas: ' + agent.stats.llamadas + '\n';
+                content += '│    📋 Tasaciones: ' + agent.stats.tasaciones + '\n';
+                content += '│    ⭐ Exclusivas: ' + agent.stats.exclusivas + '\n';
+                content += '│    🏠 Ventas: ' + agent.stats.ventas + '\n';
+                content += '│    🔑 Alquileres: ' + agent.stats.alquileres + '\n';
+                content += '│\n';
+                content += '│ 📁 CARTERA DE CLIENTES:\n';
+                content += '│    Total: ' + agent.totalClientes + '\n';
+                content += '│    Activos: ' + agent.clientesActivos + '\n';
+                content += '│    Archivados: ' + agent.clientesArchivados + '\n';
+                content += '│    Tasa conversión: ' + agent.tasaConversion + '%\n';
+                content += '│\n';
+                content += '│ 💡 SUGERENCIAS DE MEJORA:\n';
+                for (var s = 0; s < agent.sugerencias.length; s++) {
+                    content += '│    ' + agent.sugerencias[s] + '\n';
+                }
+                content += '└─────────────────────────────────────────────────────────────┘\n\n';
+            }
+            
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += '                    FIN DEL REPORTE\n';
+            content += '              © 2025 Anibal Malave - CRM Inmobiliario\n';
+            content += '═══════════════════════════════════════════════════════════════\n';
+            
+            // Descargar archivo
+            downloadReport(content, 'Reporte_Agentes_' + mesActual + '_' + anioActual + '.txt');
+        }
+
+        function generateMonthlyReport() {
+            var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            var now = new Date();
+            var currentMonth = now.getMonth();
+            var currentYear = now.getFullYear();
+            var mesActual = meses[currentMonth];
+            
+            // Recopilar estadísticas del mes
+            var clientesMes = [];
+            var llamadasMes = [];
+            var tasacionesMes = [];
+            var ventasMes = [];
+            var alquileresMes = [];
+            
+            for (var i = 0; i < clients.length; i++) {
+                var client = clients[i];
+                var fechaCreacion = new Date(client.fechaCreacion);
+                
+                // Clientes nuevos del mes
+                if (fechaCreacion.getMonth() === currentMonth && fechaCreacion.getFullYear() === currentYear) {
+                    clientesMes.push(client);
+                }
+                
+                // Llamadas del mes
+                if (client.historialLlamadas) {
+                    for (var j = 0; j < client.historialLlamadas.length; j++) {
+                        var llamada = client.historialLlamadas[j];
+                        if (llamada.fecha) {
+                            var fechaLlamada = new Date(llamada.fecha);
+                            if (fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
+                                llamadasMes.push({ cliente: client.nombre, agente: client.agente, fecha: llamada.fecha });
+                            }
+                        }
+                    }
+                }
+                
+                // Tasaciones del mes
+                if (client.seguimiento && client.seguimiento.tasacionEntregada && client.seguimiento.fechaEntrega) {
+                    var fechaTas = new Date(client.seguimiento.fechaEntrega);
+                    if (fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
+                        tasacionesMes.push({ cliente: client.nombre, agente: client.agente, fecha: client.seguimiento.fechaEntrega });
+                    }
+                }
+                
+                // Ventas y alquileres del mes
+                if (client.seguimiento && client.seguimiento.vendida && client.venta && client.venta.fecha) {
+                    var fechaVenta = new Date(client.venta.fecha);
+                    if (fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
+                        var operacion = {
+                            cliente: client.nombre,
+                            agente: client.agente,
+                            fecha: client.venta.fecha,
+                            precio: client.venta.precio,
+                            moneda: client.venta.moneda
+                        };
+                        if (client.tipoOperacion === 'alquiler') {
+                            alquileresMes.push(operacion);
+                        } else {
+                            ventasMes.push(operacion);
+                        }
+                    }
+                }
+            }
+            
+            // Generar contenido del reporte
+            var content = '═══════════════════════════════════════════════════════════════\n';
+            content += '                  REPORTE MENSUAL DETALLADO\n';
+            content += '                    ' + mesActual + ' ' + currentYear + '\n';
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += 'Generado: ' + now.toLocaleString('es-ES') + '\n';
+            content += 'Empresa: Imperium Harmony\n';
+            content += '═══════════════════════════════════════════════════════════════\n\n';
+            
+            // Resumen del mes
+            content += '📊 RESUMEN DEL MES\n';
+            content += '───────────────────────────────────────────────────────────────\n';
+            content += '🆕 Clientes nuevos: ' + clientesMes.length + '\n';
+            content += '📞 Llamadas realizadas: ' + llamadasMes.length + '\n';
+            content += '📋 Tasaciones entregadas: ' + tasacionesMes.length + '\n';
+            content += '🏠 Ventas cerradas: ' + ventasMes.length + '\n';
+            content += '🔑 Alquileres cerrados: ' + alquileresMes.length + '\n';
+            content += '💰 Total operaciones: ' + (ventasMes.length + alquileresMes.length) + '\n\n';
+            
+            // Indicadores de rendimiento
+            var tasaConversionLlamadas = llamadasMes.length > 0 ? ((tasacionesMes.length / llamadasMes.length) * 100).toFixed(1) : 0;
+            var tasaConversionTasaciones = tasacionesMes.length > 0 ? (((ventasMes.length + alquileresMes.length) / tasacionesMes.length) * 100).toFixed(1) : 0;
+            
+            content += '📈 INDICADORES DE RENDIMIENTO\n';
+            content += '───────────────────────────────────────────────────────────────\n';
+            content += 'Tasa conversión llamadas → tasaciones: ' + tasaConversionLlamadas + '%\n';
+            content += 'Tasa conversión tasaciones → operaciones: ' + tasaConversionTasaciones + '%\n\n';
+            
+            // Detalle de ventas
+            if (ventasMes.length > 0) {
+                content += '🏠 DETALLE DE VENTAS\n';
+                content += '───────────────────────────────────────────────────────────────\n';
+                for (var v = 0; v < ventasMes.length; v++) {
+                    var venta = ventasMes[v];
+                    var simbolo = venta.moneda === 'USD' ? 'US$' : (venta.moneda === 'UYU' ? '$' : '€');
+                    content += (v + 1) + '. ' + venta.cliente + '\n';
+                    content += '   Agente: ' + venta.agente + '\n';
+                    content += '   Fecha: ' + venta.fecha + '\n';
+                    content += '   Precio: ' + simbolo + ' ' + (venta.precio || 'N/A') + '\n\n';
+                }
+            }
+            
+            // Detalle de alquileres
+            if (alquileresMes.length > 0) {
+                content += '🔑 DETALLE DE ALQUILERES\n';
+                content += '───────────────────────────────────────────────────────────────\n';
+                for (var a = 0; a < alquileresMes.length; a++) {
+                    var alquiler = alquileresMes[a];
+                    var simb = alquiler.moneda === 'USD' ? 'US$' : (alquiler.moneda === 'UYU' ? '$' : '€');
+                    content += (a + 1) + '. ' + alquiler.cliente + '\n';
+                    content += '   Agente: ' + alquiler.agente + '\n';
+                    content += '   Fecha: ' + alquiler.fecha + '\n';
+                    content += '   Precio: ' + simb + ' ' + (alquiler.precio || 'N/A') + '\n\n';
+                }
+            }
+            
+            // Clientes nuevos
+            if (clientesMes.length > 0) {
+                content += '🆕 CLIENTES NUEVOS DEL MES\n';
+                content += '───────────────────────────────────────────────────────────────\n';
+                for (var c = 0; c < clientesMes.length; c++) {
+                    var cli = clientesMes[c];
+                    content += (c + 1) + '. ' + cli.nombre + ' (' + (cli.tipoOperacion === 'alquiler' ? 'Alquiler' : 'Venta') + ')\n';
+                    content += '   Agente: ' + cli.agente + '\n';
+                    content += '   Dirección: ' + (cli.direccion || 'N/A') + '\n\n';
+                }
+            }
+            
+            // Análisis y recomendaciones
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += '💡 ANÁLISIS Y RECOMENDACIONES\n';
+            content += '═══════════════════════════════════════════════════════════════\n\n';
+            
+            if (ventasMes.length + alquileresMes.length === 0) {
+                content += '⚠️ No se cerraron operaciones este mes.\n';
+                content += '   Recomendación: Revisar el pipeline de clientes y\n';
+                content += '   aumentar el seguimiento a prospectos calificados.\n\n';
+            } else if (ventasMes.length + alquileresMes.length >= 3) {
+                content += '🌟 ¡Excelente mes! Se cerraron ' + (ventasMes.length + alquileresMes.length) + ' operaciones.\n';
+                content += '   Recomendación: Mantener las estrategias actuales\n';
+                content += '   y documentar las mejores prácticas.\n\n';
+            }
+            
+            if (llamadasMes.length < 10) {
+                content += '📞 El volumen de llamadas es bajo (' + llamadasMes.length + ').\n';
+                content += '   Recomendación: Incrementar la prospección activa.\n\n';
+            }
+            
+            if (tasacionesMes.length === 0 && llamadasMes.length > 10) {
+                content += '📋 Muchas llamadas pero pocas tasaciones.\n';
+                content += '   Recomendación: Mejorar el pitch de pre-tasación\n';
+                content += '   y la calificación de prospectos.\n\n';
+            }
+            
+            content += '═══════════════════════════════════════════════════════════════\n';
+            content += '                    FIN DEL REPORTE\n';
+            content += '              © 2025 Anibal Malave - CRM Inmobiliario\n';
+            content += '═══════════════════════════════════════════════════════════════\n';
+            
+            // Descargar archivo
+            downloadReport(content, 'Reporte_Mensual_' + mesActual + '_' + currentYear + '.txt');
+        }
+
+        function downloadReport(content, filename) {
+            var blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert('📊 Reporte descargado: ' + filename);
+        }
+
         // ============ PAGINACION ============
         function goToPage(page) {
             currentPage = page;
@@ -4418,7 +4768,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.1';
+        var APP_VERSION = '2.7.2';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4446,7 +4796,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.1 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.2 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
