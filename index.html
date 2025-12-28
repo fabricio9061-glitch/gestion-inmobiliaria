@@ -1198,7 +1198,7 @@
                             🔐 Cambiar Contraseña
                         </button>
                         <button class="dropdown-item" onclick="downloadBackup(); closeMenu();">
-                            Descargar Respaldo
+                            💾 Descargar Respaldo
                         </button>
                         <button class="dropdown-item" onclick="document.getElementById('fileInput').click(); closeMenu();">
                             📂 Cargar Respaldo
@@ -1206,6 +1206,17 @@
                         <button class="dropdown-item" onclick="syncNow(); closeMenu();">
                             🔄 Sincronizar Ahora
                         </button>
+                        <!-- Opciones de Sistema Técnico -->
+                        <div id="stMenuOptions" style="display: none;">
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 8px 0;">
+                            <div style="padding: 5px 15px; font-size: 0.75em; color: #888; text-transform: uppercase;">Sistema Técnico</div>
+                            <button class="dropdown-item" onclick="openUserManagement(); closeMenu();">
+                                👥 Gestión de Usuarios
+                            </button>
+                            <button class="dropdown-item" onclick="openTopManagement(); closeMenu();">
+                                🏆 Gestión del TOP
+                            </button>
+                        </div>
                         <button class="dropdown-item danger" onclick="logout()">
                             🚪 Cerrar Sesión
                         </button>
@@ -1493,6 +1504,7 @@
             </div>
             <div style="padding: 10px 15px; background: #f8f9fa; border-bottom: 1px solid #ddd; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button onclick="openUserManagement()" class="btn" style="background: #6f42c1; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">👥 Gestionar Usuarios</button>
+                <button onclick="openTopManagement()" class="btn" style="background: #ffc107; color: #333; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🏆 Gestión del TOP</button>
                 <button onclick="clearSupportInbox()" class="btn" style="background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer;">🗑️ Limpiar Inbox</button>
             </div>
             <div id="supportInboxList" style="max-height: 450px; overflow-y: auto; padding: 15px;"></div>
@@ -1551,6 +1563,20 @@
                     <button onclick="saveUserChanges()" class="btn btn-success">💾 Guardar Cambios</button>
                     <button onclick="closeEditUser()" class="btn btn-secondary">Cancelar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Gestión del TOP -->
+    <div id="topManagementModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #ffc107, #e0a800); color: #333;">
+                <h2>🏆 Gestión del TOP</h2>
+                <span class="close" onclick="closeTopManagement()" style="color: #333;">&times;</span>
+            </div>
+            <div style="padding: 20px;">
+                <p style="color: #666; margin-bottom: 15px;">Administra los agentes del ranking. Puedes reasignar o eliminar agentes con sus clientes.</p>
+                <div id="topManagementList"></div>
             </div>
         </div>
     </div>
@@ -2290,11 +2316,13 @@
             if (isSupport) {
                 document.getElementById('supportBubble').style.display = 'none';
                 document.getElementById('supportInboxBtn').style.display = 'block';
+                document.getElementById('stMenuOptions').style.display = 'block';
                 updateSupportBadge();
                 renderSupportInbox();
             } else {
                 document.getElementById('supportBubble').style.display = 'flex';
                 document.getElementById('supportInboxBtn').style.display = 'none';
+                document.getElementById('stMenuOptions').style.display = 'none';
             }
             
             migrateOldData();
@@ -3458,16 +3486,10 @@
                 else if (j === 1) { posClass = 'silver'; posEmoji = '🥈'; }
                 else if (j === 2) { posClass = 'bronze'; posEmoji = '🥉'; }
                 
-                // Botón de eliminar solo para ST (y no para el admin principal)
-                var removeBtn = '';
-                if (isSupport && agent.name !== ADMIN_USER) {
-                    removeBtn = ' <button class="top-remove-btn" onclick="removeFromTop(\'' + agent.name.replace(/'/g, "\\'") + '\')" title="Eliminar del ranking">×</button>';
-                }
-                
                 html += '<div class="top-agent ' + posClass + '">' +
                     '<div class="top-position">' + posEmoji + '</div>' +
                     '<div class="top-info">' +
-                        '<div class="top-name">' + agent.name + removeBtn + '</div>' +
+                        '<div class="top-name">' + agent.name + '</div>' +
                         '<div class="top-stats">📞' + agent.stats.llamadas + ' | 📋' + agent.stats.tasaciones + ' | ⭐' + agent.stats.exclusivas + ' | 🏠' + agent.stats.ventas + ' | 🔑' + agent.stats.alquileres + '</div>' +
                     '</div>' +
                     '<div class="top-score">' + agent.stats.score + ' pts</div>' +
@@ -3728,7 +3750,7 @@
         }
 
         window.onclick = function(event) {
-            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal', 'userManagementModal', 'editUserModal'];
+            var modals = ['followUpModal', 'saleModal', 'callModal', 'passwordModal', 'supportInboxModal', 'quickCallModal', 'userManagementModal', 'editUserModal', 'topManagementModal'];
             for (var i = 0; i < modals.length; i++) { var modal = document.getElementById(modals[i]); if (event.target === modal) { modal.style.display = 'none'; if (modals[i] !== 'callModal') currentClientIndex = -1; } }
         }
 
@@ -4094,6 +4116,157 @@
             alert('✅ Usuario eliminado correctamente');
         }
 
+        // ============ GESTIÓN DEL TOP ============
+        function openTopManagement() {
+            if (!isSupport) return;
+            document.getElementById('topManagementModal').style.display = 'block';
+            renderTopManagementList();
+        }
+
+        function closeTopManagement() {
+            document.getElementById('topManagementModal').style.display = 'none';
+        }
+
+        function renderTopManagementList() {
+            if (!isSupport) return;
+            var container = document.getElementById('topManagementList');
+            
+            // Obtener agentes únicos de los clientes
+            var agentNames = {};
+            for (var i = 0; i < clients.length; i++) {
+                var agentName = clients[i].agente;
+                if (agentName) {
+                    if (!agentNames[agentName]) {
+                        agentNames[agentName] = { count: 0, ventas: 0, alquileres: 0 };
+                    }
+                    agentNames[agentName].count++;
+                    if (clients[i].seguimiento && clients[i].seguimiento.vendida) {
+                        if (clients[i].tipoOperacion === 'alquiler') {
+                            agentNames[agentName].alquileres++;
+                        } else {
+                            agentNames[agentName].ventas++;
+                        }
+                    }
+                }
+            }
+            
+            var agents = Object.keys(agentNames);
+            
+            if (agents.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay agentes en el sistema</p>';
+                return;
+            }
+            
+            var html = '<table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr style="background: #fff3cd;">';
+            html += '<th style="padding: 10px; text-align: left; border-bottom: 2px solid #ddd;">Agente</th>';
+            html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Clientes</th>';
+            html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Ventas</th>';
+            html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Alquileres</th>';
+            html += '<th style="padding: 10px; text-align: center; border-bottom: 2px solid #ddd;">Acciones</th>';
+            html += '</tr></thead><tbody>';
+            
+            for (var j = 0; j < agents.length; j++) {
+                var agent = agents[j];
+                var data = agentNames[agent];
+                var isAdminAgent = agent === ADMIN_USER;
+                
+                html += '<tr style="border-bottom: 1px solid #eee;">';
+                html += '<td style="padding: 12px; font-weight: bold;">' + agent;
+                if (isAdminAgent) html += ' <span style="color: #ffc107;">👑</span>';
+                html += '</td>';
+                html += '<td style="padding: 12px; text-align: center;">' + data.count + '</td>';
+                html += '<td style="padding: 12px; text-align: center;">' + data.ventas + '</td>';
+                html += '<td style="padding: 12px; text-align: center;">' + data.alquileres + '</td>';
+                html += '<td style="padding: 12px; text-align: center;">';
+                
+                if (!isAdminAgent) {
+                    html += '<button onclick="reassignAgentClients(\'' + agent.replace(/'/g, "\\'") + '\')" style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 5px; font-size: 0.85em;">🔄 Reasignar</button>';
+                    html += '<button onclick="deleteAgentFromTop(\'' + agent.replace(/'/g, "\\'") + '\')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85em;">🗑️ Eliminar</button>';
+                } else {
+                    html += '<span style="color: #999; font-size: 0.85em;">Protegido</span>';
+                }
+                
+                html += '</td>';
+                html += '</tr>';
+            }
+            
+            html += '</tbody></table>';
+            html += '<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 5px; font-size: 0.85em;">';
+            html += '📊 Total de agentes: <strong>' + agents.length + '</strong>';
+            html += '</div>';
+            
+            container.innerHTML = html;
+        }
+
+        function reassignAgentClients(agentName) {
+            if (!isSupport) return;
+            
+            var clientCount = 0;
+            for (var i = 0; i < clients.length; i++) {
+                if (clients[i].agente === agentName) clientCount++;
+            }
+            
+            var newAgent = prompt(
+                'Reasignar ' + clientCount + ' cliente(s) de "' + agentName + '"\n\n' +
+                'Escribe el nombre del nuevo agente:'
+            );
+            
+            if (!newAgent || newAgent.trim() === '') return;
+            newAgent = newAgent.trim();
+            
+            if (!confirm('¿Confirmas reasignar ' + clientCount + ' cliente(s) de "' + agentName + '" a "' + newAgent + '"?')) {
+                return;
+            }
+            
+            for (var j = 0; j < clients.length; j++) {
+                if (clients[j].agente === agentName) {
+                    clients[j].agente = newAgent;
+                }
+            }
+            
+            saveToFirebase();
+            renderTopManagementList();
+            updateTopAgents();
+            displayClients();
+            alert('✅ Clientes reasignados correctamente de "' + agentName + '" a "' + newAgent + '"');
+        }
+
+        function deleteAgentFromTop(agentName) {
+            if (!isSupport) return;
+            if (agentName === ADMIN_USER) {
+                alert('No puedes eliminar al administrador principal.');
+                return;
+            }
+            
+            var clientCount = 0;
+            for (var i = 0; i < clients.length; i++) {
+                if (clients[i].agente === agentName) clientCount++;
+            }
+            
+            if (!confirm('⚠️ ATENCIÓN: Vas a eliminar "' + agentName + '" y sus ' + clientCount + ' cliente(s).\n\n¿Estás seguro? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            if (!confirm('⚠️ CONFIRMACIÓN FINAL:\n\nSe eliminarán permanentemente ' + clientCount + ' clientes.\n\n¿Continuar?')) {
+                return;
+            }
+            
+            // Eliminar clientes del agente
+            for (var j = clients.length - 1; j >= 0; j--) {
+                if (clients[j].agente === agentName) {
+                    clients.splice(j, 1);
+                }
+            }
+            
+            saveToFirebase();
+            renderTopManagementList();
+            updateTopAgents();
+            displayClients();
+            updateStats();
+            alert('✅ Agente "' + agentName + '" y sus clientes han sido eliminados.');
+        }
+
         // ============ PAGINACION ============
         function goToPage(page) {
             currentPage = page;
@@ -4111,7 +4284,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.5.2';
+        var APP_VERSION = '2.6.0';
         var APP_BUILD_DATE = '28/12/2024';
         
         function showVersionInfo() {
@@ -4138,7 +4311,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.5.2 | © 2024 Imperium Harmony
+            🏢 CRM Inmobiliario | Versión: 2.6.0 | © 2024 Imperium Harmony
         </span>
     </footer>
 </body>
