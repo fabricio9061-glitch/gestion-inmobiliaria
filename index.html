@@ -1438,8 +1438,12 @@
                             <div class="form-group">
                                 <select id="agentSelector" onchange="updateAgentStats()">
                                     <option value="">Seleccionar agente...</option>
+                                    <option value="__ALL__">📊 Todos los agentes (Reporte completo)</option>
                                 </select>
                             </div>
+                            <button id="btnReporteAgente" onclick="generateAgentReport()" style="width: 100%; margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #d2a94d, #b6802d); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95em; display: none;">
+                                📄 Descargar Reporte PDF
+                            </button>
                             <div class="stats-filter-btns" id="agentFilterBtns" style="display: none;">
                                 <button class="stats-filter-btn active" id="agentFilterAll" onclick="filterAgentStats('all')">Todos</button>
                                 <button class="stats-filter-btn" id="agentFilterVentas" onclick="filterAgentStats('venta')">Ventas</button>
@@ -1484,9 +1488,6 @@
                             <h3>Ultima Sesión de Agentes</h3>
                             <div id="agentsLastLogin"></div>
                         </div>
-                        <button id="btnReporteAgentes" onclick="generateAgentReport()" style="width: 100%; margin-top: 10px; padding: 12px; background: linear-gradient(135deg, #d2a94d, #b6802d); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95em; display: none;">
-                            📄 Descargar Reporte de Agentes PDF
-                        </button>
                     </div>
 
                     <!-- Stats Mensual -->
@@ -2395,16 +2396,14 @@
                 document.getElementById('stMenuOptions').style.display = 'none';
             }
             
-            // Mostrar menú de reportes para Admin y Líderes
+            // Mostrar botón de reporte mensual para Admin y Líderes
             var isLider = false;
             if (currentUserData && currentUserData.oficina && OFICINAS[currentUserData.oficina]) {
                 isLider = (currentAgent === OFICINAS[currentUserData.oficina].lider);
             }
             if (isAdmin || isLider) {
-                document.getElementById('btnReporteAgentes').style.display = 'block';
                 document.getElementById('btnReporteMensual').style.display = 'block';
             } else {
-                document.getElementById('btnReporteAgentes').style.display = 'none';
                 document.getElementById('btnReporteMensual').style.display = 'none';
             }
             
@@ -3472,6 +3471,7 @@
             var selector = document.getElementById('agentSelector');
             var agents = getUniqueAgents();
             selector.innerHTML = '<option value="">Seleccionar agente...</option>';
+            selector.innerHTML += '<option value="__ALL__">📊 Todos los agentes (Reporte completo)</option>';
             for (var i = 0; i < agents.length; i++) { var opt = document.createElement('option'); opt.value = agents[i]; opt.textContent = agents[i]; selector.appendChild(opt); }
         }
 
@@ -3503,7 +3503,33 @@
             var agentName = document.getElementById('agentSelector').value;
             var content = document.getElementById('agentStatsContent');
             var filterBtns = document.getElementById('agentFilterBtns');
-            if (!agentName) { content.style.display = 'none'; filterBtns.style.display = 'none'; return; }
+            var btnReporte = document.getElementById('btnReporteAgente');
+            
+            // Si no hay selección, ocultar todo
+            if (!agentName) { 
+                content.style.display = 'none'; 
+                filterBtns.style.display = 'none'; 
+                if (btnReporte) btnReporte.style.display = 'none';
+                return; 
+            }
+            
+            // Mostrar botón de reporte (solo para Admin y Líderes)
+            if (btnReporte && (isAdmin || isCurrentUserLider())) {
+                btnReporte.style.display = 'block';
+                if (agentName === '__ALL__') {
+                    btnReporte.innerHTML = '📄 Descargar Reporte de TODOS los Agentes (PDF)';
+                } else {
+                    btnReporte.innerHTML = '📄 Descargar Reporte de ' + agentName + ' (PDF)';
+                }
+            }
+            
+            // Si es "Todos los agentes", ocultar estadísticas individuales
+            if (agentName === '__ALL__') {
+                content.style.display = 'none';
+                filterBtns.style.display = 'none';
+                return;
+            }
+            
             content.style.display = 'block';
             filterBtns.style.display = 'flex';
             
@@ -3532,6 +3558,14 @@
             document.getElementById('agentNoExclusivas').textContent = noExclusivas;
             document.getElementById('agentPublicadas').textContent = publicadas;
             document.getElementById('agentVentas').textContent = ventas;
+        }
+        
+        function isCurrentUserLider() {
+            var currentUserData = findUser(currentAgent);
+            if (currentUserData && currentUserData.oficina && OFICINAS[currentUserData.oficina]) {
+                return currentAgent === OFICINAS[currentUserData.oficina].lider;
+            }
+            return false;
         }
 
         function getAgentScore(agentName) {
@@ -4426,12 +4460,16 @@
             var { jsPDF } = window.jspdf;
             var doc = new jsPDF();
             
+            // Obtener el agente seleccionado
+            var selectedAgent = document.getElementById('agentSelector').value;
+            var reportarTodos = (selectedAgent === '__ALL__' || !selectedAgent);
+            
             var meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
             var now = new Date();
             var mesActual = meses[now.getMonth()];
             var anioActual = now.getFullYear();
             
-            var agents = getUniqueAgents();
+            var agents = reportarTodos ? getUniqueAgents() : [selectedAgent];
             var reportData = [];
             
             // Recopilar datos de cada agente
@@ -4501,9 +4539,11 @@
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.text('REPORTE DE RENDIMIENTO DE AGENTES', 105, 15, { align: 'center' });
+            var tituloReporte = reportarTodos ? 'REPORTE DE RENDIMIENTO DE AGENTES' : 'REPORTE DE RENDIMIENTO';
+            doc.text(tituloReporte, 105, 15, { align: 'center' });
             doc.setFontSize(14);
-            doc.text(mesActual + ' ' + anioActual, 105, 25, { align: 'center' });
+            var subtitulo = reportarTodos ? mesActual + ' ' + anioActual : selectedAgent + ' - ' + mesActual + ' ' + anioActual;
+            doc.text(subtitulo, 105, 25, { align: 'center' });
             doc.setFontSize(10);
             doc.text('Generado: ' + now.toLocaleString('es-ES'), 105, 32, { align: 'center' });
             
@@ -4515,39 +4555,49 @@
             doc.rect(10, y, 190, 35, 'F');
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('RESUMEN EJECUTIVO', 15, y + 8);
+            doc.text(reportarTodos ? 'RESUMEN EJECUTIVO' : 'RESUMEN DEL AGENTE', 15, y + 8);
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
-            doc.text('Total Agentes: ' + reportData.length, 15, y + 18);
-            doc.text('Llamadas: ' + totalLlamadas, 60, y + 18);
-            doc.text('Tasaciones: ' + totalTasaciones, 105, y + 18);
-            doc.text('Exclusivas: ' + totalExclusivas, 150, y + 18);
+            if (reportarTodos) {
+                doc.text('Total Agentes: ' + reportData.length, 15, y + 18);
+            }
+            doc.text('Llamadas: ' + totalLlamadas, reportarTodos ? 60 : 15, y + 18);
+            doc.text('Tasaciones: ' + totalTasaciones, reportarTodos ? 105 : 60, y + 18);
+            doc.text('Exclusivas: ' + totalExclusivas, reportarTodos ? 150 : 105, y + 18);
             doc.text('Ventas: ' + totalVentas, 15, y + 28);
             doc.text('Alquileres: ' + totalAlquileres, 60, y + 28);
             doc.text('Total Operaciones: ' + (totalVentas + totalAlquileres), 105, y + 28);
             
             y += 45;
             
-            // TOP 3
-            doc.setFillColor(255, 215, 0);
-            doc.rect(10, y, 190, 25, 'F');
-            doc.setFont('helvetica', 'bold');
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text('TOP 3 AGENTES DEL MES', 105, y + 8, { align: 'center' });
+            // TOP 3 (solo para reporte de todos)
+            if (reportarTodos && reportData.length > 1) {
+                doc.setFillColor(255, 215, 0);
+                doc.rect(10, y, 190, 25, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                doc.text('TOP 3 AGENTES DEL MES', 105, y + 8, { align: 'center' });
+            }
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            var medals = ['1ro', '2do', '3ro'];
-            for (var t = 0; t < Math.min(3, reportData.length); t++) {
-                doc.text(medals[t] + ' ' + reportData[t].nombre + ' - ' + reportData[t].stats.score + ' pts', 15 + (t * 65), y + 20);
-            }
             
-            y += 35;
+            // TOP 3 lista (solo para reporte de todos)
+            if (reportarTodos && reportData.length > 1) {
+                var medals = ['1ro', '2do', '3ro'];
+                for (var t = 0; t < Math.min(3, reportData.length); t++) {
+                    doc.text(medals[t] + ' ' + reportData[t].nombre + ' - ' + reportData[t].stats.score + ' pts', 15 + (t * 65), y + 20);
+                }
+                
+                y += 35;
+            } else {
+                y += 10;
+            }
             
             // Detalle por agente
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(14);
-            doc.text('DETALLE POR AGENTE', 105, y, { align: 'center' });
+            doc.text(reportarTodos ? 'DETALLE POR AGENTE' : 'DETALLE DEL AGENTE', 105, y, { align: 'center' });
             y += 10;
             
             for (var k = 0; k < reportData.length; k++) {
@@ -4609,7 +4659,10 @@
             doc.setFontSize(8);
             doc.text('CRM Inmobiliario - (c) 2025 Anibal Malave - Todos los derechos reservados', 105, 290, { align: 'center' });
             
-            doc.save('Reporte_Agentes_' + mesActual + '_' + anioActual + '.pdf');
+            var nombreArchivo = reportarTodos ? 
+                'Reporte_Todos_Agentes_' + mesActual + '_' + anioActual + '.pdf' :
+                'Reporte_' + selectedAgent.replace(/\s/g, '_') + '_' + mesActual + '_' + anioActual + '.pdf';
+            doc.save(nombreArchivo);
             alert('Reporte PDF descargado correctamente');
         }
 
@@ -4873,7 +4926,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.3';
+        var APP_VERSION = '2.7.4';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4901,7 +4954,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.3 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.4 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
