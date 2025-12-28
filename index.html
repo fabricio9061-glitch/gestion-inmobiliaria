@@ -2644,12 +2644,28 @@
                 // Badge del agente (solo admin)
                 var agentBadge = (isAdmin && filter === 'all') ? '<span class="agent-badge" style="font-size: 0.75em;">' + (client.agente || 'Sin agente') + '</span>' : '';
                 
+                // Contador de progreso del cliente
+                var s = client.seguimiento || {};
+                var llamadasCount = client.cantidadLlamadas || 0;
+                var operacionCount = s.vendida ? 1 : 0;
+                
+                var statsCounter = '';
+                if (client.tipoOperacion === 'alquiler') {
+                    // Alquileres: solo llamadas y alquiler
+                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 🔑' + operacionCount + '</span>';
+                } else {
+                    // Ventas: llamadas, tasación, exclusiva, venta
+                    var tasacionCount = s.tasacionEntregada === true ? 1 : 0;
+                    var exclusivaCount = s.tipoExclusiva ? 1 : 0;
+                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📋' + tasacionCount + ' | ⭐' + exclusivaCount + ' | 🏠' + operacionCount + '</span>';
+                }
+                
                 // Sección compacta (siempre visible)
                 var compactHTML = '<div class="client-card-compact" onclick="toggleClientDetails(' + index + ')">';
                 compactHTML += '<div class="client-photo" onclick="event.stopPropagation(); uploadClientPhoto(' + index + ')" title="Clic para agregar foto">' + photoContent + '</div>';
                 compactHTML += '<div class="client-compact-info">';
                 compactHTML += '<div class="client-compact-header"><span class="client-name">' + client.nombre + '</span><span class="type-badge ' + tipoClass + '">' + tipoText + '</span>' + agentBadge + '</div>';
-                compactHTML += '<div class="client-compact-stage"><span class="stage-badge ' + stage.class + '" style="padding: 2px 8px; font-size: 0.75em;">' + stage.badge + '</span></div>';
+                compactHTML += '<div class="client-compact-stage"><span class="stage-badge ' + stage.class + '" style="padding: 2px 8px; font-size: 0.75em;">' + stage.badge + '</span>' + statsCounter + '</div>';
                 compactHTML += seguimientoNote;
                 compactHTML += '</div>';
                 compactHTML += '<span class="client-expand-icon">▼</span>';
@@ -4307,7 +4323,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.3';
+        var APP_VERSION = '2.6.5';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4335,7 +4351,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.3 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.6.5 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
