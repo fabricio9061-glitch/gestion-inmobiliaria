@@ -1792,19 +1792,54 @@
 
             updateSyncStatus('syncing');
 
-            var clientsObj = {};
-            for (var i = 0; i < clients.length; i++) {
-                clientsObj['client_' + i] = clients[i];
+            // Función para limpiar valores undefined que Firebase no acepta
+            function cleanForFirebase(obj) {
+                if (obj === null || obj === undefined) return null;
+                if (typeof obj !== 'object') return obj;
+                if (Array.isArray(obj)) {
+                    return obj.map(function(item) { return cleanForFirebase(item); });
+                }
+                var cleaned = {};
+                for (var key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        var value = obj[key];
+                        if (value !== undefined) {
+                            cleaned[key] = cleanForFirebase(value);
+                        }
+                    }
+                }
+                return cleaned;
             }
 
-            db.ref('clients').set(clientsObj).then(function() {
+            var clientsObj = {};
+            for (var i = 0; i < clients.length; i++) {
+                clientsObj['client_' + i] = cleanForFirebase(clients[i]);
+            }
+
+            // Timeout de seguridad (10 segundos)
+            var saveTimeout = setTimeout(function() {
+                console.warn('Timeout al guardar en Firebase');
                 updateSyncStatus('online');
                 showSaveIndicator();
-            }).catch(function(e) {
-                console.error('Error guardando:', e);
+            }, 10000);
+
+            try {
+                db.ref('clients').set(clientsObj).then(function() {
+                    clearTimeout(saveTimeout);
+                    updateSyncStatus('online');
+                    showSaveIndicator();
+                }).catch(function(e) {
+                    clearTimeout(saveTimeout);
+                    console.error('Error guardando en Firebase:', e);
+                    updateSyncStatus('offline');
+                    saveToLocalStorage();
+                });
+            } catch (e) {
+                clearTimeout(saveTimeout);
+                console.error('Error en saveToFirebase:', e);
                 updateSyncStatus('offline');
-                saveToLocalStorage(); // Fallback
-            });
+                saveToLocalStorage();
+            }
         }
 
         function saveUsersToFirebase() {
