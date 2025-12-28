@@ -756,10 +756,11 @@
         .top-agent {
             display: flex;
             align-items: center;
-            padding: 10px;
+            padding: 10px 12px;
             margin-bottom: 8px;
             border-radius: 8px;
             background: #f8f9fa;
+            gap: 10px;
         }
         .top-agent.gold {
             background: linear-gradient(135deg, #ffd700 0%, #ffec8b 100%);
@@ -775,36 +776,65 @@
             font-weight: bold;
         }
         .top-position {
-            font-size: 1.5em;
-            margin-right: 12px;
-            min-width: 35px;
+            font-size: 1.4em;
+            min-width: 30px;
             text-align: center;
+            flex-shrink: 0;
         }
         .top-info {
             flex: 1;
+            min-width: 0;
+            overflow: hidden;
         }
         .top-name {
             font-weight: 600;
             color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .top-agent.bronze .top-name {
             color: white;
         }
         .top-stats {
-            font-size: 0.8em;
+            font-size: 0.75em;
             color: #666;
-            margin-top: 3px;
+            margin-top: 2px;
         }
         .top-agent.bronze .top-stats {
             color: #f0e6d3;
         }
         .top-score {
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
             color: #b6802d;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
         .top-agent.bronze .top-score {
             color: white;
+        }
+        .top-remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 11px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            padding: 0;
+            line-height: 1;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            margin-left: 5px;
+        }
+        .top-remove-btn:hover {
+            opacity: 1;
         }
         /* Config Modal */
         .config-section {
@@ -865,8 +895,11 @@
             .tab { padding: 10px 14px; font-size: 0.85em; min-height: 44px; }
             .modal-content { margin: 0; padding: 15px; width: 100%; max-height: 100vh; border-radius: 0; }
             .modal { padding: 0; }
-            .top-agent { flex-wrap: wrap; padding: 10px; }
-            .top-score { width: 100%; text-align: right; margin-top: 5px; }
+            .top-agent { padding: 8px 10px; gap: 8px; }
+            .top-position { font-size: 1.2em; min-width: 25px; }
+            .top-score { font-size: 0.95em; }
+            .top-stats { font-size: 0.7em; }
+            .top-remove-btn { width: 20px; height: 20px; min-height: 20px; font-size: 12px; }
             .contact-btn { padding: 10px 14px; min-height: 44px; }
             .client-card-compact { padding: 12px; }
             .support-chat { width: calc(100vw - 20px); right: 10px; bottom: 80px; }
@@ -879,7 +912,8 @@
             .form-section, .stats-section { padding: 10px; }
             .client-card { margin-bottom: 10px; }
             .stats-card { padding: 12px; }
-            .top-stats { font-size: 0.75em; }
+            .top-stats { font-size: 0.65em; }
+            .top-name { font-size: 0.9em; }
         }
         /* Preferencias de movimiento reducido */
         @media (prefers-reduced-motion: reduce) {
@@ -3420,14 +3454,14 @@
                 var posClass = '';
                 var posEmoji = (j + 1) + '.';
                 
-                if (j === 0) { posClass = 'gold'; posEmoji = 'TOP 1'; }
-                else if (j === 1) { posClass = 'silver'; posEmoji = 'TOP 2'; }
-                else if (j === 2) { posClass = 'bronze'; posEmoji = 'TOP 3'; }
+                if (j === 0) { posClass = 'gold'; posEmoji = '🥇'; }
+                else if (j === 1) { posClass = 'silver'; posEmoji = '🥈'; }
+                else if (j === 2) { posClass = 'bronze'; posEmoji = '🥉'; }
                 
                 // Botón de eliminar solo para ST (y no para el admin principal)
                 var removeBtn = '';
                 if (isSupport && agent.name !== ADMIN_USER) {
-                    removeBtn = '<button onclick="removeFromTop(\'' + agent.name.replace(/'/g, "\\'") + '\')" style="background: #dc3545; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 0.7em; cursor: pointer; margin-left: 8px;" title="Eliminar del ranking">×</button>';
+                    removeBtn = ' <button class="top-remove-btn" onclick="removeFromTop(\'' + agent.name.replace(/'/g, "\\'") + '\')" title="Eliminar del ranking">×</button>';
                 }
                 
                 html += '<div class="top-agent ' + posClass + '">' +
@@ -4077,7 +4111,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.5.0';
+        var APP_VERSION = '2.5.2';
         var APP_BUILD_DATE = '28/12/2024';
         
         function showVersionInfo() {
@@ -4104,7 +4138,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.5.0 | © 2024 Imperium Harmony
+            🏢 CRM Inmobiliario | Versión: 2.5.2 | © 2024 Imperium Harmony
         </span>
     </footer>
 </body>
