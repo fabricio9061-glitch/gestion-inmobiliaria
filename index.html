@@ -2845,7 +2845,7 @@
 
         function buildFollowUpHTML(client, s, esAlquiler) {
             var html = '';
-            var clearBtn = '<button type="button" onclick="clearRadio(this)" style="background:#f0f0f0; border:1px solid #ddd; border-radius:50%; width:24px; height:24px; font-size:0.7em; cursor:pointer; margin-left:10px;" title="Desmarcar">✖</button>';
+            var clearBtn = '<button type="button" onclick="clearRadio(this)" style="background:#f0f0f0; border:1px solid #ddd; border-radius:50%; width:22px; height:22px; min-width:22px; min-height:22px; font-size:12px; cursor:pointer; margin-left:8px; display:inline-flex; align-items:center; justify-content:center; padding:0; line-height:1; vertical-align:middle;" title="Desmarcar">✕</button>';
             
             html += '<div class="stage-section"><div class="stage-title">1. ¿Se realizó la llamada?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="seLlamoSi" name="seLlamo" value="si" ' + (s.seLlamo === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="seLlamoSi">Sí</label></div><div class="radio-item"><input type="radio" id="seLlamoNo" name="seLlamo" value="no" ' + (s.seLlamo === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="seLlamoNo">No</label></div></div>' + (s.seLlamo === false ? '<div class="alert-box alert-warning">Pendiente por llamar</div>' : '') + '</div>';
             if (s.seLlamo !== true) return html;
@@ -2855,8 +2855,8 @@
 
             html += '<div class="stage-section"><div class="stage-title">3. ¿Es inmobiliaria?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="inmobiliariaSi" name="esInmobiliaria" value="si" ' + (s.esInmobiliaria === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="inmobiliariaSi">Sí</label></div><div class="radio-item"><input type="radio" id="inmobiliariaNo" name="esInmobiliaria" value="no" ' + (s.esInmobiliaria === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="inmobiliariaNo">No</label></div></div>';
             if (s.esInmobiliaria === true) {
-                html += '<div class="alert-box alert-warning">Se archivará automáticamente</div>';
                 html += '<div class="form-group" style="margin-top:15px"><label>¿Comparten?</label><div class="radio-group"><div class="radio-item"><input type="radio" id="compartenSi" name="compartenPropiedad" value="si" ' + (s.compartenPropiedad === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="compartenSi">Sí</label></div><div class="radio-item"><input type="radio" id="compartenNo" name="compartenPropiedad" value="no" ' + (s.compartenPropiedad === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="compartenNo">No</label></div></div></div><div class="form-group"><label>Nota:</label><textarea id="notaInmobiliaria">' + (s.notaInmobiliaria || '') + '</textarea></div>';
+                html += '<button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarComoInmobiliaria()">📁 Archivar como Inmobiliaria</button>';
             }
             html += '</div>';
             if (s.esInmobiliaria !== false) return html;
@@ -2895,7 +2895,7 @@
             if (s.tasacionEntregada !== true) return html;
 
             html += '<div class="stage-section"><div class="stage-title">8. ¿Acepta la tasación?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="aceptaTasacionSi" name="aceptaTasacion" value="si" ' + (s.aceptaTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="aceptaTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="aceptaTasacionNo" name="aceptaTasacion" value="no" ' + (s.aceptaTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="aceptaTasacionNo">No</label></div></div>';
-            if (s.aceptaTasacion === false) html += '<div class="alert-box alert-warning">Se archivará con seguimiento</div>';
+            if (s.aceptaTasacion === false) html += '<button type="button" class="btn btn-warning" style="margin-top:15px;width:100%;background:#ffc107;color:#333;" onclick="archivarConSeguimiento()">📋 Archivar con Seguimiento</button>';
             html += '</div>';
             if (s.aceptaTasacion !== true) return html;
 
@@ -2949,14 +2949,6 @@
             if (s.huboRespuesta) client.ultimoContacto = new Date().toISOString();
             s.esInmobiliaria = getValue('esInmobiliaria');
             
-            // Si es inmobiliaria, archivar automáticamente
-            if (s.esInmobiliaria === true && !client.archivado) {
-                client.archivado = true;
-                client.fechaArchivado = new Date().toISOString();
-                s.motivoArchivo = 'inmobiliaria';
-                alert('📁 Cliente archivado automáticamente (es inmobiliaria)');
-            }
-            
             s.compartenPropiedad = getValue('compartenPropiedad');
             s.fueVendido = getValue('fueVendido');
             s.esDueno = getValue('esDueno');
@@ -2965,15 +2957,6 @@
             s.tasacionEntregada = getValue('tasacionEntregada');
             if (s.tasacionEntregada) client.ultimoContacto = new Date().toISOString();
             s.aceptaTasacion = getValue('aceptaTasacion');
-            
-            // Si no acepta tasación, archivar y marcar para seguimiento
-            if (s.aceptaTasacion === false && !client.archivado) {
-                client.archivado = true;
-                client.fechaArchivado = new Date().toISOString();
-                s.motivoArchivo = 'no_acepta_tasacion';
-                s.requiereSeguimiento = true;
-                alert('📁 Cliente archivado (no acepta tasación). Marcado para seguimiento futuro.');
-            }
             
             s.publicaste = getValue('publicaste');
 
@@ -3019,6 +3002,39 @@
                 updateArchivedCount();
                 updateStats();
                 closeModal();
+            }
+        }
+
+        function archivarComoInmobiliaria() {
+            if (confirm('¿Archivar este cliente como inmobiliaria?')) {
+                var client = clients[currentClientIndex];
+                client.archivado = true;
+                client.fechaArchivado = new Date().toISOString();
+                client.ultimoContacto = new Date().toISOString();
+                client.seguimiento.motivoArchivo = 'inmobiliaria';
+                saveToFirebase();
+                displayClients();
+                updateArchivedCount();
+                updateStats();
+                closeModal();
+                alert('📁 Cliente archivado como inmobiliaria');
+            }
+        }
+
+        function archivarConSeguimiento() {
+            if (confirm('¿Archivar este cliente con seguimiento?\n\nSe marcará para hacer seguimiento futuro.')) {
+                var client = clients[currentClientIndex];
+                client.archivado = true;
+                client.fechaArchivado = new Date().toISOString();
+                client.ultimoContacto = new Date().toISOString();
+                client.seguimiento.motivoArchivo = 'no_acepta_tasacion';
+                client.seguimiento.requiereSeguimiento = true;
+                saveToFirebase();
+                displayClients();
+                updateArchivedCount();
+                updateStats();
+                closeModal();
+                alert('📋 Cliente archivado con seguimiento');
             }
         }
 
@@ -4291,7 +4307,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.6.2';
+        var APP_VERSION = '2.6.3';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -4319,7 +4335,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.6.2 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.6.3 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
