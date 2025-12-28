@@ -347,6 +347,13 @@
             margin-bottom: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
+        #statsContent, #totalCallsSection {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         .stats-card h3 {
             color: #c2943b;
             margin-bottom: 15px;
@@ -1375,48 +1382,50 @@
                         <div class="stats-card">
                             <h3 id="statsTitle">Mis Estadisticas</h3>
                             <div class="stats-filter-btns">
-                                <button class="stats-filter-btn active" id="filterAll" onclick="filterStats('all')">Todos</button>
+                                <button class="stats-filter-btn" id="filterAll" onclick="filterStats('all')">Todos</button>
                                 <button class="stats-filter-btn" id="filterVentas" onclick="filterStats('venta')">Ventas</button>
                                 <button class="stats-filter-btn" id="filterAlquileres" onclick="filterStats('alquiler')">Alquileres</button>
                             </div>
-                            <div class="stat-row">
-                                <span class="stat-label">Se llamo</span>
-                                <span class="stat-value" id="statLlamado">0</span>
-                            </div>
-                            <div class="stat-row">
-                                <span class="stat-label">Con respuesta</span>
-                                <span class="stat-value" id="statRespuesta">0</span>
-                            </div>
-                            <div class="stat-row" id="rowPreTasacion">
-                                <span class="stat-label">Pre-Tasacion</span>
-                                <span class="stat-value" id="statPreTasacion">0</span>
-                            </div>
-                            <div class="stat-row" id="rowTasacionEntregada">
-                                <span class="stat-label">Tasacion Entregada</span>
-                                <span class="stat-value" id="statTasacionEntregada">0</span>
-                            </div>
-                            <div class="stat-row" id="rowAceptaTasacion">
-                                <span class="stat-label">Acepta Tasacion</span>
-                                <span class="stat-value" id="statAceptaTasacion">0</span>
-                            </div>
-                            <div class="stat-row" id="rowExclusiva">
-                                <span class="stat-label">Con Exclusiva</span>
-                                <span class="stat-value" id="statExclusiva">0</span>
-                            </div>
-                            <div class="stat-row" id="rowPublicadas">
-                                <span class="stat-label">Publicadas</span>
-                                <span class="stat-value" id="statPublicadas">0</span>
-                            </div>
-                            <div class="stat-row">
-                                <span class="stat-label" id="labelVendidas">Vendidas/Alquiladas</span>
-                                <span class="stat-value" id="statVendidas">0</span>
-                            </div>
-                            <div class="stat-row" id="rowOtraInmobiliaria" style="display: none;">
-                                <span class="stat-label">Alquilados por otra inmobiliaria</span>
-                                <span class="stat-value" id="statOtraInmobiliaria">0</span>
+                            <div id="statsContent" style="display: none;">
+                                <div class="stat-row">
+                                    <span class="stat-label">Se llamo</span>
+                                    <span class="stat-value" id="statLlamado">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Con respuesta</span>
+                                    <span class="stat-value" id="statRespuesta">0</span>
+                                </div>
+                                <div class="stat-row" id="rowPreTasacion">
+                                    <span class="stat-label">Pre-Tasacion</span>
+                                    <span class="stat-value" id="statPreTasacion">0</span>
+                                </div>
+                                <div class="stat-row" id="rowTasacionEntregada">
+                                    <span class="stat-label">Tasacion Entregada</span>
+                                    <span class="stat-value" id="statTasacionEntregada">0</span>
+                                </div>
+                                <div class="stat-row" id="rowAceptaTasacion">
+                                    <span class="stat-label">Acepta Tasacion</span>
+                                    <span class="stat-value" id="statAceptaTasacion">0</span>
+                                </div>
+                                <div class="stat-row" id="rowExclusiva">
+                                    <span class="stat-label">Con Exclusiva</span>
+                                    <span class="stat-value" id="statExclusiva">0</span>
+                                </div>
+                                <div class="stat-row" id="rowPublicadas">
+                                    <span class="stat-label">Publicadas</span>
+                                    <span class="stat-value" id="statPublicadas">0</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label" id="labelVendidas">Vendidas/Alquiladas</span>
+                                    <span class="stat-value" id="statVendidas">0</span>
+                                </div>
+                                <div class="stat-row" id="rowOtraInmobiliaria" style="display: none;">
+                                    <span class="stat-label">Alquilados por otra inmobiliaria</span>
+                                    <span class="stat-value" id="statOtraInmobiliaria">0</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="total-calls">
+                        <div class="total-calls" id="totalCallsSection" style="display: none;">
                             <div style="font-size: 1em; font-weight: 600;">MIS LLAMADAS</div>
                             <div class="total-calls-number" id="totalLlamadas">0</div>
                         </div>
@@ -3398,10 +3407,49 @@
             document.getElementById('statsMonthly').style.display = tab === 'monthly' ? 'block' : 'none';
             if (tab === 'agent' && isAdmin) { populateAgentSelector(); updateAgentsSummary(); updateAgentsLastLogin(); }
             if (tab === 'monthly' && isAdmin) { populateMonthlyAgentSelector(); }
+            
+            // Resetear estado de filtros de Mis Estadísticas al cambiar de pestaña
+            if (tab !== 'general') {
+                statsContentVisible = false;
+                currentStatsFilter = null;
+                var statsContent = document.getElementById('statsContent');
+                var totalCallsSection = document.getElementById('totalCallsSection');
+                if (statsContent) statsContent.style.display = 'none';
+                if (totalCallsSection) totalCallsSection.style.display = 'none';
+                document.getElementById('filterAll').classList.remove('active');
+                document.getElementById('filterVentas').classList.remove('active');
+                document.getElementById('filterAlquileres').classList.remove('active');
+            }
         }
 
+        var statsContentVisible = false;
+        var currentStatsFilter = null;
+        
         function filterStats(tipo) {
+            var statsContent = document.getElementById('statsContent');
+            var totalCallsSection = document.getElementById('totalCallsSection');
+            
+            // Si el mismo botón está activo, ocultar contenido (toggle off)
+            if (currentStatsFilter === tipo && statsContentVisible) {
+                statsContent.style.display = 'none';
+                totalCallsSection.style.display = 'none';
+                statsContentVisible = false;
+                currentStatsFilter = null;
+                
+                // Quitar clase active de todos los botones
+                document.getElementById('filterAll').classList.remove('active');
+                document.getElementById('filterVentas').classList.remove('active');
+                document.getElementById('filterAlquileres').classList.remove('active');
+                return;
+            }
+            
+            // Mostrar contenido y activar filtro
             statsFilter = tipo;
+            currentStatsFilter = tipo;
+            statsContentVisible = true;
+            statsContent.style.display = 'block';
+            totalCallsSection.style.display = 'block';
+            
             document.getElementById('filterAll').classList.toggle('active', tipo === 'all');
             document.getElementById('filterVentas').classList.toggle('active', tipo === 'venta');
             document.getElementById('filterAlquileres').classList.toggle('active', tipo === 'alquiler');
@@ -5161,7 +5209,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.5';
+        var APP_VERSION = '2.7.6';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5189,7 +5237,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.5 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.6 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
