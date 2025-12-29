@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
     ═══════════════════════════════════════════════════════════════
-    CRM Inmobiliario - Sistema de Gestión de Clientes
+    Gestión de Clientes - Sistema de Gestión de Clientes
     ═══════════════════════════════════════════════════════════════
     
     Copyright (c) 2025 Anibal Malave
@@ -21,13 +21,13 @@
     <meta name="theme-color" content="#d2a94d">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="CRM Inmobiliario - Gestión de clientes y propiedades">
+    <meta name="description" content="Gestión de Clientes - Gestión de clientes y propiedades">
     <meta name="mobile-web-app-capable" content="yes">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="author" content="Anibal Malave">
     <meta name="copyright" content="Copyright (c) 2025 Anibal Malave. Todos los derechos reservados.">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <title>CRM Inmobiliario</title>
+    <title>Gestión de Clientes</title>
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -4863,7 +4863,7 @@
             doc.rect(0, 280, 210, 17, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
-            doc.text('CRM Inmobiliario - (c) 2025 Anibal Malave - Todos los derechos reservados', 105, 290, { align: 'center' });
+            doc.text('Gestion de Clientes - (c) 2025 Anibal Malave - Todos los derechos reservados', 105, 290, { align: 'center' });
             
             var nombreArchivo = reportarTodos ? 
                 'Reporte_Todos_Agentes_' + mesActual + '_' + anioActual + '.pdf' :
@@ -5188,7 +5188,7 @@
             doc.rect(0, 280, 210, 17, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
-            doc.text('CRM Inmobiliario - (c) 2025 Anibal Malave - Todos los derechos reservados', 105, 290, { align: 'center' });
+            doc.text('Gestion de Clientes - (c) 2025 Anibal Malave - Todos los derechos reservados', 105, 290, { align: 'center' });
             
             doc.save('Reporte_Mensual_' + mesActual + '_' + currentYear + '.pdf');
             alert('Reporte PDF descargado correctamente');
@@ -5211,12 +5211,12 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.9';
+        var APP_VERSION = '2.8.0';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
             alert(
-                '🏢 CRM Inmobiliario\n\n' +
+                '🏢 Gestión de Clientes\n\n' +
                 'Versión: ' + APP_VERSION + '\n' +
                 'Última actualización: ' + APP_BUILD_DATE + '\n\n' +
                 '© 2025 Anibal Malave\n' +
@@ -5239,7 +5239,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.9 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.8.0 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
