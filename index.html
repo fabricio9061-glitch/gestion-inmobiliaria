@@ -3009,7 +3009,7 @@
                 
                 // Botón "No se alquiló" solo para alquileres
                 if (esAlquiler) {
-                    html += '<button type="button" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 1em; margin-top: 10px; background: #6c757d; color: white;" onclick="archivarNoSeAlquilo()">❌ No se alquiló (otra inmobiliaria)</button>';
+                    html += '<button type="button" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 1em; margin-top: 10px; background: #6c757d; color: white;" onclick="archivarNoSeAlquilo()">🚫 No se alquiló</button>';
                 }
                 html += '</div>';
             } else {
@@ -3136,7 +3136,6 @@
             
             // Manejar cambios en "Se realizó la llamada"
             if (nuevoSeLlamo === true && seLlamoAnterior !== true && !s.llamadaInicialRegistrada) {
-                // Agregar llamada inicial por primera vez
                 client.historialLlamadas = client.historialLlamadas || [];
                 client.historialLlamadas.push({ 
                     fecha: new Date().toISOString().split('T')[0], 
@@ -3148,7 +3147,6 @@
                 client.ultimoContacto = new Date().toISOString();
                 s.llamadaInicialRegistrada = true;
             } else if (nuevoSeLlamo === false && s.llamadaInicialRegistrada) {
-                // Cambió de Sí a No - eliminar llamada inicial del historial
                 if (client.historialLlamadas && client.historialLlamadas.length > 0) {
                     for (var k = client.historialLlamadas.length - 1; k >= 0; k--) {
                         if (client.historialLlamadas[k].esInicial || client.historialLlamadas[k].nota === 'Llamada inicial') {
@@ -3162,10 +3160,24 @@
             }
             s.seLlamo = nuevoSeLlamo;
 
-            s.huboRespuesta = getValue('huboRespuesta');
+            // Leer valores actuales del DOM
+            var huboRespuesta = getValue('huboRespuesta');
+            var esInmobiliaria = getValue('esInmobiliaria');
+            var compartenPropiedad = getValue('compartenPropiedad');
+            var fueVendido = getValue('fueVendido');
+            var esDueno = getValue('esDueno');
+            var aceptaPreTasacion = getValue('aceptaPreTasacion');
+            var tasacionEntregada = getValue('tasacionEntregada');
+            var aceptaTasacion = getValue('aceptaTasacion');
+            var tipoExclusiva = getVal('tipoExclusiva');
+            var publicaste = getValue('publicaste');
+
+            // Actualizar valores con lógica de reset en cascada
+            s.huboRespuesta = huboRespuesta;
             if (s.huboRespuesta) client.ultimoContacto = new Date().toISOString();
-            // Reset cascada: si huboRespuesta es false, resetear todo lo que sigue
-            if (s.huboRespuesta === false) {
+            
+            // Si huboRespuesta es false o null, resetear todo lo que sigue
+            if (s.huboRespuesta !== true) {
                 s.esInmobiliaria = null;
                 s.compartenPropiedad = null;
                 s.fueVendido = null;
@@ -3177,80 +3189,96 @@
                 s.publicaste = null;
                 s.fechaEntrega = '';
                 s.modalidadEntrega = '';
+            } else {
+                s.esInmobiliaria = esInmobiliaria;
+                s.compartenPropiedad = compartenPropiedad;
+                s.fueVendido = fueVendido;
+                
+                // Si fueVendido es true, resetear lo que sigue
+                if (s.fueVendido === true) {
+                    s.esDueno = null;
+                    s.aceptaPreTasacion = null;
+                    s.tasacionEntregada = null;
+                    s.aceptaTasacion = null;
+                    s.tipoExclusiva = '';
+                    s.publicaste = null;
+                } else if (s.fueVendido === false) {
+                    s.esDueno = esDueno;
+                    
+                    // Si esDueno es false, resetear lo que sigue
+                    if (s.esDueno === false) {
+                        s.aceptaPreTasacion = null;
+                        s.tasacionEntregada = null;
+                        s.aceptaTasacion = null;
+                        s.tipoExclusiva = '';
+                        s.publicaste = null;
+                    } else if (s.esDueno === true) {
+                        s.aceptaPreTasacion = aceptaPreTasacion;
+                        
+                        // Si aceptaPreTasacion es false, resetear lo que sigue
+                        if (s.aceptaPreTasacion === false) {
+                            s.tasacionEntregada = null;
+                            s.aceptaTasacion = null;
+                            s.tipoExclusiva = '';
+                            s.publicaste = null;
+                            s.fechaEntrega = '';
+                            s.modalidadEntrega = '';
+                        } else if (s.aceptaPreTasacion === true) {
+                            // Para alquileres, publicaste viene después de aceptaPreTasacion
+                            if (client.tipoOperacion === 'alquiler') {
+                                s.publicaste = publicaste;
+                            } else {
+                                // Para ventas, continuar con tasación
+                                var fe = getVal('fechaEntrega'); if (fe !== null) s.fechaEntrega = fe;
+                                var me = getVal('modalidadEntrega'); if (me !== null) s.modalidadEntrega = me;
+                                s.personaEntrega = currentAgent;
+                                s.tasacionEntregada = tasacionEntregada;
+                                if (s.tasacionEntregada) client.ultimoContacto = new Date().toISOString();
+                                
+                                // Si tasacionEntregada es false, resetear lo que sigue
+                                if (s.tasacionEntregada === false) {
+                                    s.aceptaTasacion = null;
+                                    s.tipoExclusiva = '';
+                                    s.publicaste = null;
+                                } else if (s.tasacionEntregada === true) {
+                                    s.aceptaTasacion = aceptaTasacion;
+                                    
+                                    // Si aceptaTasacion es false, resetear lo que sigue
+                                    if (s.aceptaTasacion === false) {
+                                        s.tipoExclusiva = '';
+                                        s.publicaste = null;
+                                    } else if (s.aceptaTasacion === true) {
+                                        s.tipoExclusiva = tipoExclusiva || '';
+                                        
+                                        // Solo leer publicaste si hay tipoExclusiva
+                                        if (s.tipoExclusiva) {
+                                            s.publicaste = publicaste;
+                                        } else {
+                                            s.publicaste = null;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
-            
-            s.esInmobiliaria = getValue('esInmobiliaria');
-            
-            s.compartenPropiedad = getValue('compartenPropiedad');
-            s.fueVendido = getValue('fueVendido');
-            // Reset cascada: si fueVendido es true (ya fue vendido/alquilado por otro), resetear
-            if (s.fueVendido === true) {
-                s.esDueno = null;
-                s.aceptaPreTasacion = null;
-                s.tasacionEntregada = null;
-                s.aceptaTasacion = null;
-                s.tipoExclusiva = '';
-                s.publicaste = null;
-            }
-            
-            s.esDueno = getValue('esDueno');
-            // Reset cascada: si esDueno es false, resetear lo que sigue
-            if (s.esDueno === false) {
-                s.aceptaPreTasacion = null;
-                s.tasacionEntregada = null;
-                s.aceptaTasacion = null;
-                s.tipoExclusiva = '';
-                s.publicaste = null;
-            }
-            
-            s.aceptaPreTasacion = getValue('aceptaPreTasacion');
-            // Reset cascada: si aceptaPreTasacion es false, resetear lo que sigue
-            if (s.aceptaPreTasacion === false) {
-                s.tasacionEntregada = null;
-                s.aceptaTasacion = null;
-                s.tipoExclusiva = '';
-                s.publicaste = null;
-                s.fechaEntrega = '';
-                s.modalidadEntrega = '';
-            }
-            
-            s.tasacionEntregada = getValue('tasacionEntregada');
-            if (s.tasacionEntregada) client.ultimoContacto = new Date().toISOString();
-            // Reset cascada: si tasacionEntregada es false, resetear lo que sigue
-            if (s.tasacionEntregada === false) {
-                s.aceptaTasacion = null;
-                s.tipoExclusiva = '';
-                s.publicaste = null;
-            }
-            
-            s.aceptaTasacion = getValue('aceptaTasacion');
-            // Reset cascada: si aceptaTasacion es false, resetear lo que sigue
-            if (s.aceptaTasacion === false) {
-                s.tipoExclusiva = '';
-                s.publicaste = null;
-            }
-            
-            // Solo actualizar publicaste si el elemento existe en el DOM
-            var publicasteVal = getValue('publicaste');
-            if (publicasteVal !== null) s.publicaste = publicasteVal;
 
+            // Guardar campos de texto si existen
             var fields = ['notaInmobiliaria', 'notaNoDueno', 'numeroNuevoDueno'];
             for (var i = 0; i < fields.length; i++) { var v = getVal(fields[i]); if (v !== null) s[fields[i]] = v; }
-            var fe = getVal('fechaEntrega'); if (fe !== null) s.fechaEntrega = fe;
-            var me = getVal('modalidadEntrega'); if (me !== null) s.modalidadEntrega = me;
-            s.personaEntrega = currentAgent;
-            var te = getVal('tipoExclusiva'); if (te !== null) s.tipoExclusiva = te;
 
+            // Guardar plataformas de publicación
             var plataformas = [];
             var platNames = ['Mercado Libre', 'Infocasas', 'Gallito', 'Facebook Marketplace', 'Instagram', 'Sitio Web Propio', 'Otros'];
             for (var j = 0; j < platNames.length; j++) {
                 var cb = document.getElementById('plat_' + platNames[j].replace(/\s/g, ''));
                 if (cb && cb.checked) plataformas.push(platNames[j]);
             }
-            // Siempre guardar el array de plataformas si publicaste es true
             if (s.publicaste === true) {
                 s.plataformasPublicacion = plataformas;
             }
+            
             openFollowUp(currentClientIndex);
         }
 
@@ -5398,7 +5426,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.9.1';
+        var APP_VERSION = '2.9.2';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5426,7 +5454,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.9.1 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.9.2 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
