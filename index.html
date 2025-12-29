@@ -1332,10 +1332,6 @@
                                 <input type="text" id="linkPropiedad" placeholder="https://...">
                             </div>
                             <div class="form-group">
-                                <label for="fechaLlamada">Fecha de Primera Llamada</label>
-                                <input type="date" id="fechaLlamada">
-                            </div>
-                            <div class="form-group">
                                 <label for="nota">Notas</label>
                                 <textarea id="nota"></textarea>
                             </div>
@@ -1825,6 +1821,14 @@
             }
             // Agregar más oficinas aquí en el futuro
         };
+        
+        // Función para parsear fechas en formato YYYY-MM-DD de manera local (evita problemas de zona horaria)
+        function parseLocalDate(dateStr) {
+            if (!dateStr) return null;
+            var parts = dateStr.split('-');
+            if (parts.length !== 3) return new Date(dateStr);
+            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        }
         
         var clients = [];
         var users = [];
@@ -2467,7 +2471,6 @@
                 tipoOperacion: document.getElementById('tipoOperacion').value,
                 direccion: document.getElementById('direccion').value,
                 linkPropiedad: document.getElementById('linkPropiedad').value,
-                fechaLlamada: document.getElementById('fechaLlamada').value,
                 nota: document.getElementById('nota').value,
                 cantidadLlamadas: 0,
                 historialLlamadas: [],
@@ -2740,8 +2743,8 @@
                     for (var k = 0; k < client.historialLlamadas.length; k++) {
                         var llamada = client.historialLlamadas[k];
                         if (llamada.fecha) {
-                            var fechaLlamada = new Date(llamada.fecha);
-                            if (fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
+                            var fechaLlamada = parseLocalDate(llamada.fecha.split('T')[0]);
+                            if (fechaLlamada && fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
                                 llamadasCount++;
                             }
                         }
@@ -2751,8 +2754,8 @@
                 // Contar operación cerrada del mes actual
                 var operacionCount = 0;
                 if (s.vendida && client.venta && client.venta.fecha) {
-                    var fechaVenta = new Date(client.venta.fecha);
-                    if (fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
+                    var fechaVenta = parseLocalDate(client.venta.fecha);
+                    if (fechaVenta && fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
                         operacionCount = 1;
                     }
                 }
@@ -2765,18 +2768,19 @@
                     // Ventas: llamadas, tasación, exclusiva, venta (del mes actual)
                     var tasacionCount = 0;
                     if (s.tasacionEntregada === true && s.fechaEntrega) {
-                        var fechaTas = new Date(s.fechaEntrega);
-                        if (fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
+                        var fechaTas = parseLocalDate(s.fechaEntrega);
+                        if (fechaTas && fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
                             tasacionCount = 1;
                         }
                     }
                     
                     var exclusivaCount = 0;
-                    if (s.tipoExclusiva && s.tipoExclusiva !== 'No Exclusiva') {
+                    // Solo contar como exclusiva si es exactamente "Exclusiva"
+                    if (s.tipoExclusiva === 'Exclusiva') {
                         var fechaRef = s.fechaEntrega || client.fechaCreacion;
                         if (fechaRef) {
-                            var fechaExc = new Date(fechaRef);
-                            if (fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
+                            var fechaExc = parseLocalDate(fechaRef.split('T')[0]);
+                            if (fechaExc && fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
                                 exclusivaCount = 1;
                             }
                         }
@@ -2980,6 +2984,21 @@
             var esAlquiler = client.tipoOperacion === 'alquiler';
             var html = buildFollowUpHTML(client, s, esAlquiler);
             html += '<div class="btn-group"><button type="button" class="btn btn-primary" onclick="saveFollowUp()">Guardar</button><button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button></div>';
+            
+            // Botón de Registrar Venta/Alquiler independiente (siempre visible si no se ha registrado)
+            if (!s.vendida) {
+                var btnText = esAlquiler ? '🔑 Registrar Alquiler' : '🏠 Registrar Venta';
+                html += '<div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;"><button type="button" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1.1em;" onclick="openSaleModal()">' + btnText + '</button></div>';
+            } else {
+                // Mostrar información de la venta registrada
+                var v = client.venta;
+                var simbolo = v.moneda === 'USD' ? 'US$' : (v.moneda === 'UYU' ? '$' : '€');
+                var tipoOp = esAlquiler ? 'Alquiler' : 'Venta';
+                html += '<div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; border: 2px solid #4caf50;"><div style="font-weight: bold; color: #2e7d32; font-size: 1.1em; margin-bottom: 10px;">✅ ' + tipoOp + ' Registrada</div>';
+                html += '<div style="font-size: 0.95em;"><strong>Fecha:</strong> ' + (v.fecha || 'N/A') + '</div>';
+                html += '<div style="font-size: 0.95em;"><strong>Precio:</strong> ' + simbolo + ' ' + (v.precio || 'N/A') + '</div></div>';
+            }
+            
             document.getElementById('modalBody').innerHTML = html;
             document.getElementById('followUpModal').style.display = 'block';
         }
@@ -3019,7 +3038,6 @@
                 
                 if (s.aceptaPreTasacion === true) {
                     html += '<div class="stage-section"><div class="stage-title">7. ¿Lo alquilamos nosotros?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="loAlquilamosSi" name="loAlquilamosNosotros" value="si" ' + (s.loAlquilamosNosotros === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="loAlquilamosSi">Sí</label></div><div class="radio-item"><input type="radio" id="loAlquilamosNo" name="loAlquilamosNosotros" value="no" ' + (s.loAlquilamosNosotros === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="loAlquilamosNo">No</label></div></div>';
-                    if (s.loAlquilamosNosotros === true && !s.vendida) html += '<button type="button" class="btn btn-success" style="width:100%;margin-top:15px" onclick="openSaleModal()">Registrar Alquiler</button>';
                     if (s.loAlquilamosNosotros === false) html += '<div class="alert-box alert-warning">Archivar cliente</div><button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarCliente()">Archivar</button>';
                     html += '</div>';
                 }
@@ -3053,7 +3071,6 @@
                     html += '<div class="checkbox-item"><input type="checkbox" id="plat_' + plat.replace(/\s/g, '') + '" value="' + plat + '" ' + (isChecked ? 'checked' : '') + '><label for="plat_' + plat.replace(/\s/g, '') + '">' + plat + '</label></div>';
                 }
                 html += '</div></div>';
-                if (!s.vendida) html += '<div class="stage-section" style="background:#e8f5e9;margin-top:15px"><div class="stage-title">11. Venta</div><button type="button" class="btn btn-success" style="width:100%" onclick="openSaleModal()">Registrar Venta</button></div>';
             }
             html += '</div>';
             return html;
@@ -3099,7 +3116,9 @@
             if (s.tasacionEntregada) client.ultimoContacto = new Date().toISOString();
             s.aceptaTasacion = getValue('aceptaTasacion');
             
-            s.publicaste = getValue('publicaste');
+            // Solo actualizar publicaste si el elemento existe en el DOM
+            var publicasteVal = getValue('publicaste');
+            if (publicasteVal !== null) s.publicaste = publicasteVal;
 
             var fields = ['notaInmobiliaria', 'notaNoDueno', 'numeroNuevoDueno'];
             for (var i = 0; i < fields.length; i++) { var v = getVal(fields[i]); if (v !== null) s[fields[i]] = v; }
@@ -3336,7 +3355,6 @@
             
             document.getElementById('direccion').value = client.direccion || '';
             document.getElementById('linkPropiedad').value = client.linkPropiedad || '';
-            document.getElementById('fechaLlamada').value = client.fechaLlamada || '';
             document.getElementById('nota').value = client.nota || '';
             
             // Abrir el formulario si está cerrado
@@ -3633,8 +3651,8 @@
                     for (var j = 0; j < client.historialLlamadas.length; j++) {
                         var llamada = client.historialLlamadas[j];
                         if (llamada.fecha) {
-                            var fechaLlamada = new Date(llamada.fecha);
-                            if (fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
+                            var fechaLlamada = parseLocalDate(llamada.fecha.split('T')[0]);
+                            if (fechaLlamada && fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
                                 llamadas++;
                             }
                         }
@@ -3643,31 +3661,33 @@
                 
                 // Contar tasaciones del mes actual
                 if (client.seguimiento.tasacionEntregada === true && client.seguimiento.fechaEntrega) {
-                    var fechaTas = new Date(client.seguimiento.fechaEntrega);
-                    if (fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
+                    var fechaTas = parseLocalDate(client.seguimiento.fechaEntrega);
+                    if (fechaTas && fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
                         tasaciones++;
                     }
                 }
                 
                 // Contar exclusivas del mes (usamos fecha de tasación o creación como referencia)
+                // Solo "Exclusiva" cuenta como exclusiva, "Otra Modalidad" no cuenta
                 if (client.seguimiento.tipoExclusiva) {
                     var fechaRef = client.seguimiento.fechaEntrega || client.fechaCreacion;
                     if (fechaRef) {
-                        var fechaExc = new Date(fechaRef);
-                        if (fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
+                        var fechaExc = parseLocalDate(fechaRef.split('T')[0]);
+                        if (fechaExc && fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
                             if (client.seguimiento.tipoExclusiva === 'No Exclusiva') {
                                 noExclusivas++;
-                            } else {
+                            } else if (client.seguimiento.tipoExclusiva === 'Exclusiva') {
                                 exclusivas++;
                             }
+                            // "Otra Modalidad" no cuenta en ninguno
                         }
                     }
                 }
                 
                 // Contar ventas y alquileres del mes actual
                 if (client.seguimiento.vendida && client.venta && client.venta.fecha) {
-                    var fechaVenta = new Date(client.venta.fecha);
-                    if (fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
+                    var fechaVenta = parseLocalDate(client.venta.fecha);
+                    if (fechaVenta && fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
                         if (client.tipoOperacion === 'alquiler') {
                             alquileres++;
                         } else {
@@ -3916,14 +3936,14 @@
                 if (selectedAgent !== 'all' && client.agente !== selectedAgent) continue;
                 if (!isAdmin && client.agente !== currentAgent) continue;
                 
-                if (client.fechaCreacion) { var fc = new Date(client.fechaCreacion); if (fc.getFullYear() === year && fc.getMonth() + 1 === month) clientesNuevos++; }
-                if (client.historialLlamadas) { for (var j = 0; j < client.historialLlamadas.length; j++) { if (client.historialLlamadas[j].fecha) { var fl = new Date(client.historialLlamadas[j].fecha); if (fl.getFullYear() === year && fl.getMonth() + 1 === month) llamadasMes++; } } }
-                if (client.seguimiento.fechaEntrega) { var fe = new Date(client.seguimiento.fechaEntrega); if (fe.getFullYear() === year && fe.getMonth() + 1 === month) tasacionesMes++; }
+                if (client.fechaCreacion) { var fc = parseLocalDate(client.fechaCreacion.split('T')[0]); if (fc && fc.getFullYear() === year && fc.getMonth() + 1 === month) clientesNuevos++; }
+                if (client.historialLlamadas) { for (var j = 0; j < client.historialLlamadas.length; j++) { if (client.historialLlamadas[j].fecha) { var fl = parseLocalDate(client.historialLlamadas[j].fecha.split('T')[0]); if (fl && fl.getFullYear() === year && fl.getMonth() + 1 === month) llamadasMes++; } } }
+                if (client.seguimiento.fechaEntrega) { var fe = parseLocalDate(client.seguimiento.fechaEntrega); if (fe && fe.getFullYear() === year && fe.getMonth() + 1 === month) tasacionesMes++; }
                 
                 // Contar ventas y alquileres por separado
                 if (client.venta && client.venta.fecha) {
-                    var fv = new Date(client.venta.fecha);
-                    if (fv.getFullYear() === year && fv.getMonth() + 1 === month) {
+                    var fv = parseLocalDate(client.venta.fecha);
+                    if (fv && fv.getFullYear() === year && fv.getMonth() + 1 === month) {
                         if (client.tipoOperacion === 'venta') {
                             ventasMes++;
                         } else if (client.tipoOperacion === 'alquiler') {
@@ -3935,8 +3955,8 @@
                 // Contar alquileres por otra inmobiliaria
                 if (client.tipoOperacion === 'alquiler' && client.seguimiento.loAlquilamosNosotros === false) {
                     if (client.fechaArchivado) {
-                        var fa = new Date(client.fechaArchivado);
-                        if (fa.getFullYear() === year && fa.getMonth() + 1 === month) otraInmobiliaria++;
+                        var fa = parseLocalDate(client.fechaArchivado.split('T')[0]);
+                        if (fa && fa.getFullYear() === year && fa.getMonth() + 1 === month) otraInmobiliaria++;
                     }
                 }
             }
@@ -5209,7 +5229,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.7.6';
+        var APP_VERSION = '2.7.7';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5237,7 +5257,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 CRM Inmobiliario | Versión: 2.7.6 | © 2025 Anibal Malave
+            🏢 CRM Inmobiliario | Versión: 2.7.7 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
