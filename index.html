@@ -810,9 +810,10 @@
             margin-bottom: 8px;
             border-radius: 10px;
             background: #f8f9fa;
-            gap: 12px;
+            gap: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
+            flex-wrap: wrap;
         }
         .top-agent:hover {
             transform: translateX(3px);
@@ -832,65 +833,28 @@
             font-weight: bold;
         }
         .top-position {
-            font-size: 1.5em;
-            min-width: 35px;
-            text-align: center;
+            font-size: 1.4em;
             flex-shrink: 0;
-        }
-        .top-info {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
         }
         .top-name {
             font-weight: 600;
             color: #333;
             font-size: 1em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .top-expand-icon {
             font-size: 0.7em;
             color: #888;
-            transition: transform 0.2s ease;
+            margin-left: 5px;
         }
         .top-agent.bronze .top-name {
             color: white;
         }
         .top-agent.bronze .top-expand-icon {
             color: #f0e6d3;
-        }
-        .top-stats-detail {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed rgba(0,0,0,0.15);
-        }
-        .top-agent.bronze .top-stats-detail {
-            border-top-color: rgba(255,255,255,0.3);
-        }
-        .top-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-            gap: 6px 12px;
-            font-size: 0.8em;
-            color: #555;
-        }
-        .top-stats-grid span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .top-stats-grid strong {
-            color: #333;
-        }
-        .top-agent.bronze .top-stats-grid {
-            color: #f0e6d3;
-        }
-        .top-agent.bronze .top-stats-grid strong {
-            color: white;
         }
         .top-score {
             font-size: 1.1em;
@@ -901,7 +865,7 @@
             background: rgba(255,255,255,0.85);
             padding: 6px 12px;
             border-radius: 20px;
-            min-width: 75px;
+            min-width: 70px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -915,6 +879,18 @@
         .top-agent.bronze .top-score {
             color: #5a3d1a;
             background: rgba(255,255,255,0.95);
+        }
+        .top-stats-detail {
+            width: 100%;
+            padding-top: 8px;
+            margin-top: 4px;
+            border-top: 1px dashed rgba(0,0,0,0.15);
+            font-size: 0.85em;
+            color: #555;
+        }
+        .top-agent.bronze .top-stats-detail {
+            border-top-color: rgba(255,255,255,0.3);
+            color: #f0e6d3;
         }
         .top-remove-btn {
             background: #dc3545;
@@ -1002,11 +978,11 @@
             .tab { padding: 10px 14px; font-size: 0.85em; min-height: 44px; }
             .modal-content { margin: 0; padding: 15px; width: 100%; max-height: 100vh; border-radius: 0; }
             .modal { padding: 0; }
-            .top-agent { padding: 10px 12px; gap: 10px; }
-            .top-position { font-size: 1.3em; min-width: 28px; }
-            .top-score { font-size: 0.95em; padding: 5px 10px; min-width: 65px; }
-            .top-stats-grid { grid-template-columns: repeat(2, 1fr); font-size: 0.75em; }
-            .top-name { font-size: 0.95em; }
+            .top-agent { padding: 10px 12px; gap: 8px; }
+            .top-position { font-size: 1.2em; }
+            .top-score { font-size: 0.9em; padding: 5px 10px; min-width: 60px; }
+            .top-stats-detail { font-size: 0.8em; }
+            .top-name { font-size: 0.9em; }
             .top-expand-icon { font-size: 0.65em; }
             .top-remove-btn { width: 20px; height: 20px; min-height: 20px; font-size: 12px; }
             .contact-btn { padding: 10px 14px; min-height: 44px; }
@@ -1030,11 +1006,11 @@
             .form-section, .stats-section { padding: 10px; }
             .client-card { margin-bottom: 10px; }
             .stats-card { padding: 12px; }
-            .top-stats-grid { grid-template-columns: repeat(2, 1fr); font-size: 0.7em; gap: 4px 8px; }
-            .top-name { font-size: 0.9em; }
-            .top-agent { padding: 8px 10px; gap: 8px; }
-            .top-position { font-size: 1.2em; min-width: 25px; }
-            .top-score { font-size: 0.85em; padding: 4px 8px; min-width: 60px; }
+            .top-stats-detail { font-size: 0.75em; }
+            .top-name { font-size: 0.85em; }
+            .top-agent { padding: 8px 10px; gap: 6px; }
+            .top-position { font-size: 1.1em; }
+            .top-score { font-size: 0.8em; padding: 4px 8px; min-width: 55px; }
             .top-expand-icon { font-size: 0.6em; }
             .client-compact-stage { font-size: 0.65em; }
             .client-name { font-size: 0.95em; }
@@ -3842,24 +3818,14 @@
                 else if (j === 1) { posClass = 'silver'; posEmoji = '🥈'; }
                 else if (j === 2) { posClass = 'bronze'; posEmoji = '🥉'; }
                 
-                // Formato del detalle desplegable
-                var statsLine = '<div class="top-stats-grid">' +
-                    '<span>📞 Llamadas: <strong>' + agent.stats.llamadas + '</strong></span>' +
-                    '<span>📋 Tasaciones: <strong>' + agent.stats.tasaciones + '</strong></span>' +
-                    '<span>📝 No Exclusiva: <strong>' + agent.stats.noExclusivas + '</strong></span>' +
-                    '<span>⭐ Exclusiva: <strong>' + agent.stats.exclusivas + '</strong></span>' +
-                    '<span>📢 Alq. Publicado: <strong>' + agent.stats.alquileresPublicados + '</strong></span>' +
-                    '<span>🔑 Alq. Cerrado: <strong>' + agent.stats.alquileres + '</strong></span>' +
-                    '<span>🏠 Venta: <strong>' + agent.stats.ventas + '</strong></span>' +
-                '</div>';
+                // Formato del detalle desplegable en una línea horizontal
+                var statsLine = '📞' + agent.stats.llamadas + ' · 📋' + agent.stats.tasaciones + ' · 📝' + agent.stats.noExclusivas + ' · ⭐' + agent.stats.exclusivas + ' · 📢' + agent.stats.alquileresPublicados + ' · 🔑' + agent.stats.alquileres + ' · 🏠' + agent.stats.ventas;
                 
                 html += '<div class="top-agent ' + posClass + '" onclick="toggleTopStats(this)">' +
-                    '<div class="top-position">' + posEmoji + '</div>' +
-                    '<div class="top-info">' +
-                        '<div class="top-name">' + agent.name + ' <span class="top-expand-icon">▼</span></div>' +
-                        '<div class="top-stats-detail" style="display: none;">' + statsLine + '</div>' +
-                    '</div>' +
-                    '<div class="top-score">' + agent.stats.score + ' pts</div>' +
+                    '<span class="top-position">' + posEmoji + '</span>' +
+                    '<span class="top-name">' + agent.name + ' <span class="top-expand-icon">▼</span></span>' +
+                    '<span class="top-score">' + agent.stats.score + ' pts</span>' +
+                    '<div class="top-stats-detail" style="display: none;">' + statsLine + '</div>' +
                 '</div>';
             }
             
@@ -5331,7 +5297,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.8.5';
+        var APP_VERSION = '2.8.6';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5359,7 +5325,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.8.5 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.8.6 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
