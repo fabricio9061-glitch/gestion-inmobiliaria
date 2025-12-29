@@ -2731,25 +2731,34 @@
                 // Badge del agente (solo admin)
                 var agentBadge = (isAdmin && filter === 'all') ? '<span class="agent-badge" style="font-size: 0.75em;">' + (client.agente || 'Sin agente') + '</span>' : '';
                 
-                // Contador de progreso del cliente (TOTAL HISTÓRICO acumulado)
+                // Contador de progreso del cliente (TOTAL HISTÓRICO acumulado con PUNTOS)
                 var s = client.seguimiento || {};
                 
                 // Contar TODAS las llamadas (historial completo)
                 var llamadasCount = client.historialLlamadas ? client.historialLlamadas.length : 0;
                 
-                // Contar si tiene operación cerrada (venta o alquiler)
-                var operacionCount = (s.vendida && client.venta) ? 1 : 0;
-                
+                // Calcular puntos históricos según tipo de operación
+                var puntosHistoricos = 0;
                 var statsCounter = '';
+                
                 if (client.tipoOperacion === 'alquiler') {
-                    // Alquileres: solo llamadas y alquiler
-                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 🔑' + operacionCount + '</span>';
-                } else {
-                    // Ventas: llamadas, tasación, exclusiva, venta (total histórico)
-                    var tasacionCount = (s.tasacionEntregada === true) ? 1 : 0;
-                    var exclusivaCount = (s.tipoExclusiva === 'Exclusiva') ? 1 : 0;
+                    // Alquileres: llamadas (1pt), alquiler publicado (5pt), alquiler cerrado (25pt)
+                    var alqPublicado = (s.loAlquilamosNosotros === true && !s.vendida) ? 1 : 0;
+                    var alqCerrado = (s.vendida && client.venta) ? 1 : 0;
                     
-                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📋' + tasacionCount + ' | ⭐' + exclusivaCount + ' | 🏠' + operacionCount + '</span>';
+                    puntosHistoricos = (llamadasCount * 1) + (alqPublicado * 5) + (alqCerrado * 25);
+                    
+                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📢' + alqPublicado + ' | 🔑' + alqCerrado + ' | <strong style="color: #c2943b;">' + puntosHistoricos + 'pts</strong></span>';
+                } else {
+                    // Ventas: llamadas (1pt), tasación (5pt), no exclusiva (5pt), exclusiva (15pt), venta (60pt)
+                    var tasacionCount = (s.tasacionEntregada === true) ? 1 : 0;
+                    var noExclusivaCount = (s.tipoExclusiva === 'No Exclusiva') ? 1 : 0;
+                    var exclusivaCount = (s.tipoExclusiva === 'Exclusiva') ? 1 : 0;
+                    var ventaCount = (s.vendida && client.venta) ? 1 : 0;
+                    
+                    puntosHistoricos = (llamadasCount * 1) + (tasacionCount * 5) + (noExclusivaCount * 5) + (exclusivaCount * 15) + (ventaCount * 60);
+                    
+                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📋' + tasacionCount + ' | ⭐' + (noExclusivaCount + exclusivaCount) + ' | 🏠' + ventaCount + ' | <strong style="color: #c2943b;">' + puntosHistoricos + 'pts</strong></span>';
                 }
                 
                 // Sección compacta (siempre visible)
@@ -3617,7 +3626,7 @@
         }
 
         function getAgentScore(agentName) {
-            var llamadas = 0, tasaciones = 0, exclusivas = 0, noExclusivas = 0, ventas = 0, alquileres = 0;
+            var llamadas = 0, tasaciones = 0, exclusivas = 0, noExclusivas = 0, ventas = 0, alquileres = 0, alquileresPublicados = 0;
             
             // Obtener el mes y año actual
             var now = new Date();
@@ -3641,17 +3650,16 @@
                     }
                 }
                 
-                // Contar tasaciones del mes actual
-                if (client.seguimiento.tasacionEntregada === true && client.seguimiento.fechaEntrega) {
+                // Contar tasaciones del mes actual (solo ventas)
+                if (client.tipoOperacion === 'venta' && client.seguimiento.tasacionEntregada === true && client.seguimiento.fechaEntrega) {
                     var fechaTas = parseLocalDate(client.seguimiento.fechaEntrega);
                     if (fechaTas && fechaTas.getMonth() === currentMonth && fechaTas.getFullYear() === currentYear) {
                         tasaciones++;
                     }
                 }
                 
-                // Contar exclusivas del mes (usamos fecha de tasación o creación como referencia)
-                // Solo "Exclusiva" cuenta como exclusiva, "Otra Modalidad" no cuenta
-                if (client.seguimiento.tipoExclusiva) {
+                // Contar exclusivas y no exclusivas del mes (solo ventas)
+                if (client.tipoOperacion === 'venta' && client.seguimiento.tipoExclusiva) {
                     var fechaRef = client.seguimiento.fechaEntrega || client.fechaCreacion;
                     if (fechaRef) {
                         var fechaExc = parseLocalDate(fechaRef.split('T')[0]);
@@ -3661,12 +3669,22 @@
                             } else if (client.seguimiento.tipoExclusiva === 'Exclusiva') {
                                 exclusivas++;
                             }
-                            // "Otra Modalidad" no cuenta en ninguno
                         }
                     }
                 }
                 
-                // Contar ventas y alquileres del mes actual
+                // Contar alquileres publicados del mes actual
+                if (client.tipoOperacion === 'alquiler' && client.seguimiento.loAlquilamosNosotros === true && !client.seguimiento.vendida) {
+                    var fechaRefAlq = client.seguimiento.fechaEntrega || client.fechaCreacion;
+                    if (fechaRefAlq) {
+                        var fechaPub = parseLocalDate(fechaRefAlq.split('T')[0]);
+                        if (fechaPub && fechaPub.getMonth() === currentMonth && fechaPub.getFullYear() === currentYear) {
+                            alquileresPublicados++;
+                        }
+                    }
+                }
+                
+                // Contar ventas y alquileres cerrados del mes actual
                 if (client.seguimiento.vendida && client.venta && client.venta.fecha) {
                     var fechaVenta = parseLocalDate(client.venta.fecha);
                     if (fechaVenta && fechaVenta.getMonth() === currentMonth && fechaVenta.getFullYear() === currentYear) {
@@ -3679,10 +3697,20 @@
                 }
             }
             
-            // Puntuación: ventas*50 + alquileres*40 + exclusivas*30 + tasaciones*20 + llamadas*1
-            // Puntuación: ventas*60 + alquileres*25 + exclusivas*10 + tasaciones*5 + llamadas*1
-            var score = (ventas * 60) + (alquileres * 25) + (exclusivas * 10) + (tasaciones * 5) + (llamadas * 1);
-            return { llamadas: llamadas, tasaciones: tasaciones, exclusivas: exclusivas, noExclusivas: noExclusivas, ventas: ventas, alquileres: alquileres, score: score };
+            // Nueva puntuación:
+            // Llamadas = 1 pt, Tasaciones = 5 pts, No Exclusiva = 5 pts, Exclusiva = 15 pts
+            // Alquiler publicado = 5 pts, Alquiler cerrado = 25 pts, Venta = 60 pts
+            var score = (llamadas * 1) + (tasaciones * 5) + (noExclusivas * 5) + (exclusivas * 15) + (alquileresPublicados * 5) + (alquileres * 25) + (ventas * 60);
+            return { 
+                llamadas: llamadas, 
+                tasaciones: tasaciones, 
+                exclusivas: exclusivas, 
+                noExclusivas: noExclusivas, 
+                alquileresPublicados: alquileresPublicados,
+                ventas: ventas, 
+                alquileres: alquileres, 
+                score: score 
+            };
         }
 
         function showPointsInfo() {
@@ -3691,9 +3719,11 @@
                 'Los puntos se calculan por actividades del mes actual:\n\n' +
                 '📞 Llamadas realizadas: 1 punto c/u\n' +
                 '📋 Tasaciones entregadas: 5 puntos c/u\n' +
-                '⭐ Exclusivas firmadas: 10 puntos c/u\n' +
-                '🔑 Alquileres cerrados: 25 puntos c/u\n' +
-                '🏠 Ventas cerradas: 60 puntos c/u\n\n' +
+                '📝 No Exclusiva: 5 puntos c/u\n' +
+                '⭐ Exclusiva firmada: 15 puntos c/u\n' +
+                '📢 Alquiler publicado: 5 puntos c/u\n' +
+                '🔑 Alquiler cerrado: 25 puntos c/u\n' +
+                '🏠 Venta cerrada: 60 puntos c/u\n\n' +
                 '¡El ranking se reinicia cada mes!'
             );
         }
@@ -3737,7 +3767,7 @@
                     '<div class="top-position">' + posEmoji + '</div>' +
                     '<div class="top-info">' +
                         '<div class="top-name">' + agent.name + '</div>' +
-                        '<div class="top-stats">📞' + agent.stats.llamadas + '|📋' + agent.stats.tasaciones + '|⭐' + agent.stats.exclusivas + '|🏠' + agent.stats.ventas + '|🔑' + agent.stats.alquileres + '</div>' +
+                        '<div class="top-stats">📞' + agent.stats.llamadas + '|📋' + agent.stats.tasaciones + '|📝' + agent.stats.noExclusivas + '|⭐' + agent.stats.exclusivas + '|📢' + agent.stats.alquileresPublicados + '|🔑' + agent.stats.alquileres + '|🏠' + agent.stats.ventas + '</div>' +
                     '</div>' +
                     '<div class="top-score">' + agent.stats.score + ' pts</div>' +
                 '</div>';
@@ -3836,7 +3866,7 @@
                 var stats = getAgentScore(agent);
                 html += '<div class="stat-row" style="flex-wrap: wrap; gap: 5px;">' +
                     '<span class="stat-label" style="flex: 1; min-width: 100px;">' + agent + '</span>' +
-                    '<span class="stat-value" style="font-size: 0.8em; text-align: right;">📞' + stats.llamadas + ' | 📋' + stats.tasaciones + ' | ⭐' + stats.exclusivas + ' | 🏠' + stats.ventas + ' | 🔑' + stats.alquileres + ' | <strong>' + stats.score + 'pts</strong></span>' +
+                    '<span class="stat-value" style="font-size: 0.75em; text-align: right;">📞' + stats.llamadas + '|📋' + stats.tasaciones + '|📝' + stats.noExclusivas + '|⭐' + stats.exclusivas + '|📢' + stats.alquileresPublicados + '|🔑' + stats.alquileres + '|🏠' + stats.ventas + '|<strong>' + stats.score + 'pts</strong></span>' +
                 '</div>';
             }
             container.innerHTML = html || '<p style="color:#666">No hay agentes</p>';
@@ -5211,7 +5241,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.8.0';
+        var APP_VERSION = '2.8.1';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5239,7 +5269,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.8.0 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.8.1 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
