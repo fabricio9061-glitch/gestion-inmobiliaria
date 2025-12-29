@@ -805,15 +805,13 @@
         }
         .top-agent {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             padding: 12px 15px;
             margin-bottom: 8px;
             border-radius: 10px;
             background: #f8f9fa;
-            gap: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
-            flex-wrap: wrap;
         }
         .top-agent:hover {
             transform: translateX(3px);
@@ -832,23 +830,27 @@
             color: white;
             font-weight: bold;
         }
+        .top-header-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
         .top-position {
-            font-size: 1.4em;
+            font-size: 1.3em;
             flex-shrink: 0;
         }
         .top-name {
             font-weight: 600;
             color: #333;
-            font-size: 1em;
+            font-size: 0.95em;
             flex: 1;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .top-expand-icon {
-            font-size: 0.7em;
+            font-size: 0.65em;
             color: #888;
-            margin-left: 5px;
+            margin-left: 4px;
         }
         .top-agent.bronze .top-name {
             color: white;
@@ -857,21 +859,19 @@
             color: #f0e6d3;
         }
         .top-score {
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: bold;
             color: #b6802d;
             white-space: nowrap;
             flex-shrink: 0;
             background: rgba(255,255,255,0.85);
-            padding: 6px 12px;
-            border-radius: 20px;
-            min-width: 70px;
+            padding: 5px 10px;
+            border-radius: 15px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .top-agent.gold .top-score {
             background: rgba(255,255,255,0.95);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
         .top-agent.silver .top-score {
             background: rgba(255,255,255,0.95);
@@ -883,14 +883,28 @@
         .top-stats-detail {
             width: 100%;
             padding-top: 8px;
-            margin-top: 4px;
+            margin-top: 8px;
             border-top: 1px dashed rgba(0,0,0,0.15);
             font-size: 0.85em;
             color: #555;
+            white-space: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
         .top-agent.bronze .top-stats-detail {
             border-top-color: rgba(255,255,255,0.3);
             color: #f0e6d3;
+        }
+        .top-stats-detail::-webkit-scrollbar {
+            height: 4px;
+        }
+        .top-stats-detail::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+            border-radius: 2px;
+        }
+        .top-stats-detail::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 2px;
         }
         .top-remove-btn {
             background: #dc3545;
@@ -978,12 +992,13 @@
             .tab { padding: 10px 14px; font-size: 0.85em; min-height: 44px; }
             .modal-content { margin: 0; padding: 15px; width: 100%; max-height: 100vh; border-radius: 0; }
             .modal { padding: 0; }
-            .top-agent { padding: 10px 12px; gap: 8px; }
+            .top-agent { padding: 10px 12px; }
+            .top-header-row { gap: 6px; }
             .top-position { font-size: 1.2em; }
-            .top-score { font-size: 0.9em; padding: 5px 10px; min-width: 60px; }
-            .top-stats-detail { font-size: 0.8em; }
-            .top-name { font-size: 0.9em; }
-            .top-expand-icon { font-size: 0.65em; }
+            .top-score { font-size: 0.85em; padding: 4px 8px; }
+            .top-stats-detail { font-size: 0.75em; }
+            .top-name { font-size: 0.85em; }
+            .top-expand-icon { font-size: 0.6em; }
             .top-remove-btn { width: 20px; height: 20px; min-height: 20px; font-size: 12px; }
             .contact-btn { padding: 10px 14px; min-height: 44px; }
             .client-card-compact { padding: 10px; }
@@ -1006,12 +1021,13 @@
             .form-section, .stats-section { padding: 10px; }
             .client-card { margin-bottom: 10px; }
             .stats-card { padding: 12px; }
-            .top-stats-detail { font-size: 0.75em; }
-            .top-name { font-size: 0.85em; }
-            .top-agent { padding: 8px 10px; gap: 6px; }
+            .top-agent { padding: 8px 10px; }
+            .top-header-row { gap: 5px; }
+            .top-stats-detail { font-size: 0.7em; }
+            .top-name { font-size: 0.8em; }
             .top-position { font-size: 1.1em; }
-            .top-score { font-size: 0.8em; padding: 4px 8px; min-width: 55px; }
-            .top-expand-icon { font-size: 0.6em; }
+            .top-score { font-size: 0.75em; padding: 3px 6px; }
+            .top-expand-icon { font-size: 0.55em; }
             .client-compact-stage { font-size: 0.65em; }
             .client-name { font-size: 0.95em; }
             .type-badge, .agent-badge { padding: 2px 5px; font-size: 0.6em; }
@@ -3822,9 +3838,11 @@
                 var statsLine = '📞' + agent.stats.llamadas + ' · 📋' + agent.stats.tasaciones + ' · 📝' + agent.stats.noExclusivas + ' · ⭐' + agent.stats.exclusivas + ' · 📢' + agent.stats.alquileresPublicados + ' · 🔑' + agent.stats.alquileres + ' · 🏠' + agent.stats.ventas;
                 
                 html += '<div class="top-agent ' + posClass + '" onclick="toggleTopStats(this)">' +
-                    '<span class="top-position">' + posEmoji + '</span>' +
-                    '<span class="top-name">' + agent.name + ' <span class="top-expand-icon">▼</span></span>' +
-                    '<span class="top-score">' + agent.stats.score + ' pts</span>' +
+                    '<div class="top-header-row">' +
+                        '<span class="top-position">' + posEmoji + '</span>' +
+                        '<span class="top-name">' + agent.name + '<span class="top-expand-icon">▼</span></span>' +
+                        '<span class="top-score">' + agent.stats.score + ' pts</span>' +
+                    '</div>' +
                     '<div class="top-stats-detail" style="display: none;">' + statsLine + '</div>' +
                 '</div>';
             }
@@ -5297,7 +5315,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.8.6';
+        var APP_VERSION = '2.8.7';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5325,7 +5343,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.8.6 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.8.7 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
