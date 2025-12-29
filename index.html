@@ -859,14 +859,28 @@
             color: #f0e6d3;
         }
         .top-score {
-            font-size: 1.1em;
+            font-size: 1.2em;
             font-weight: bold;
             color: #b6802d;
             white-space: nowrap;
             flex-shrink: 0;
+            background: rgba(255,255,255,0.7);
+            padding: 4px 10px;
+            border-radius: 15px;
+            min-width: 70px;
+            text-align: center;
+            border: 2px solid rgba(182, 128, 45, 0.3);
+        }
+        .top-agent.gold .top-score {
+            background: rgba(255,255,255,0.85);
+            border-color: rgba(182, 128, 45, 0.5);
+        }
+        .top-agent.silver .top-score {
+            background: rgba(255,255,255,0.85);
         }
         .top-agent.bronze .top-score {
-            color: white;
+            color: #5a3d1a;
+            background: rgba(255,255,255,0.9);
         }
         .top-remove-btn {
             background: #dc3545;
@@ -2758,7 +2772,17 @@
                     
                     puntosHistoricos = (llamadasCount * 1) + (tasacionCount * 5) + (noExclusivaCount * 5) + (exclusivaCount * 15) + (ventaCount * 60);
                     
-                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📋' + tasacionCount + ' | ⭐' + (noExclusivaCount + exclusivaCount) + ' | 🏠' + ventaCount + ' | <strong style="color: #c2943b;">' + puntosHistoricos + 'pts</strong></span>';
+                    // Mostrar emoji diferente según tipo de exclusiva: 📝 No Exclusiva, ⭐ Exclusiva
+                    var exclusivaEmoji = '';
+                    if (exclusivaCount > 0) {
+                        exclusivaEmoji = '⭐1';
+                    } else if (noExclusivaCount > 0) {
+                        exclusivaEmoji = '📝1';
+                    } else {
+                        exclusivaEmoji = '📝0';
+                    }
+                    
+                    statsCounter = '<span style="font-size: 0.7em; color: #666; margin-left: 8px;">| 📞' + llamadasCount + ' | 📋' + tasacionCount + ' | ' + exclusivaEmoji + ' | 🏠' + ventaCount + ' | <strong style="color: #c2943b;">' + puntosHistoricos + 'pts</strong></span>';
                 }
                 
                 // Sección compacta (siempre visible)
@@ -5241,7 +5265,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.8.1';
+        var APP_VERSION = '2.8.2';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5269,7 +5293,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.8.1 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.8.2 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
