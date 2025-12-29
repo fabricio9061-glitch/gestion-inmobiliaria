@@ -2545,7 +2545,7 @@
             return {
                 seLlamo: null, huboRespuesta: null, esInmobiliaria: null, compartenPropiedad: null,
                 notaInmobiliaria: '', fueVendido: null, esDueno: null, notaNoDueno: '', numeroNuevoDueno: '',
-                aceptaPreTasacion: null, loAlquilamosNosotros: null, fechaEntrega: '', modalidadEntrega: '', personaEntrega: '',
+                aceptaPreTasacion: null, fechaEntrega: '', modalidadEntrega: '', personaEntrega: '',
                 tasacionEntregada: null, aceptaTasacion: null, tipoExclusiva: '', publicaste: null,
                 plataformasPublicacion: [], vendida: false, llamadaInicialRegistrada: false
             };
@@ -2764,8 +2764,8 @@
                 // Contador de progreso del cliente (TOTAL HISTÓRICO acumulado con PUNTOS)
                 var s = client.seguimiento || {};
                 
-                // Contar TODAS las llamadas (historial completo)
-                var llamadasCount = client.historialLlamadas ? client.historialLlamadas.length : 0;
+                // Contar llamada del seguimiento (1 si seLlamo=true, 0 si no)
+                var llamadasCount = (s.seLlamo === true) ? 1 : 0;
                 
                 // Calcular puntos históricos según tipo de operación
                 var puntosHistoricos = 0;
@@ -2773,7 +2773,7 @@
                 
                 if (client.tipoOperacion === 'alquiler') {
                     // Alquileres: llamadas (1pt), alquiler publicado (5pt), alquiler cerrado (25pt)
-                    var alqPublicado = (s.loAlquilamosNosotros === true && !s.vendida) ? 1 : 0;
+                    var alqPublicado = (s.aceptaPreTasacion === true && !s.vendida) ? 1 : 0;
                     var alqCerrado = (s.vendida && client.venta) ? 1 : 0;
                     
                     puntosHistoricos = (llamadasCount * 1) + (alqPublicado * 5) + (alqCerrado * 25);
@@ -3004,7 +3004,14 @@
             // Botón de Registrar Venta/Alquiler independiente (siempre visible si no se ha registrado)
             if (!s.vendida) {
                 var btnText = esAlquiler ? '🔑 Registrar Alquiler' : '🏠 Registrar Venta';
-                html += '<div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;"><button type="button" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1.1em;" onclick="openSaleModal()">' + btnText + '</button></div>';
+                html += '<div style="margin-top: 15px; padding-top: 15px; border-top: 2px dashed #ddd;">';
+                html += '<button type="button" class="btn btn-success" style="width: 100%; padding: 15px; font-size: 1.1em;" onclick="openSaleModal()">' + btnText + '</button>';
+                
+                // Botón "No se alquiló" solo para alquileres
+                if (esAlquiler) {
+                    html += '<button type="button" class="btn btn-secondary" style="width: 100%; padding: 12px; font-size: 1em; margin-top: 10px; background: #6c757d; color: white;" onclick="archivarNoSeAlquilo()">❌ No se alquiló (otra inmobiliaria)</button>';
+                }
+                html += '</div>';
             } else {
                 // Mostrar información de la venta registrada
                 var v = client.venta;
@@ -3018,18 +3025,33 @@
             document.getElementById('modalBody').innerHTML = html;
             document.getElementById('followUpModal').style.display = 'block';
         }
+        
+        function archivarNoSeAlquilo() {
+            if (!confirm('¿Archivar este cliente porque el alquiler fue realizado por otra inmobiliaria?\n\nEsto NO sumará puntos al contador.')) return;
+            var client = clients[currentClientIndex];
+            client.archivado = true;
+            client.fechaArchivado = new Date().toISOString();
+            client.ultimoContacto = new Date().toISOString();
+            client.seguimiento.motivoArchivo = 'alquilado_otra_inmobiliaria';
+            // NO se marca como vendida para que no sume puntos
+            saveToFirebase();
+            displayClients();
+            updateArchivedCount();
+            updateStats();
+            closeModal();
+            alert('Cliente archivado. El alquiler fue realizado por otra inmobiliaria.');
+        }
 
         function buildFollowUpHTML(client, s, esAlquiler) {
             var html = '';
-            var clearBtn = '<button type="button" onclick="clearRadio(this)" style="background:#f0f0f0; border:1px solid #ddd; border-radius:50%; width:22px; height:22px; min-width:22px; min-height:22px; font-size:12px; cursor:pointer; margin-left:8px; display:inline-flex; align-items:center; justify-content:center; padding:0; line-height:1; vertical-align:middle;" title="Desmarcar">✕</button>';
             
-            html += '<div class="stage-section"><div class="stage-title">1. ¿Se realizó la llamada?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="seLlamoSi" name="seLlamo" value="si" ' + (s.seLlamo === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="seLlamoSi">Sí</label></div><div class="radio-item"><input type="radio" id="seLlamoNo" name="seLlamo" value="no" ' + (s.seLlamo === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="seLlamoNo">No</label></div></div>' + (s.seLlamo === false ? '<div class="alert-box alert-warning">Pendiente por llamar</div>' : '') + '</div>';
+            html += '<div class="stage-section"><div class="stage-title">1. ¿Se realizó la llamada?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="seLlamoSi" name="seLlamo" value="si" ' + (s.seLlamo === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="seLlamoSi">Sí</label></div><div class="radio-item"><input type="radio" id="seLlamoNo" name="seLlamo" value="no" ' + (s.seLlamo === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="seLlamoNo">No</label></div></div>' + (s.seLlamo === false ? '<div class="alert-box alert-warning">Pendiente por llamar</div>' : '') + '</div>';
             if (s.seLlamo !== true) return html;
 
-            html += '<div class="stage-section"><div class="stage-title">2. ¿Hubo respuesta?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="respuestaSi" name="huboRespuesta" value="si" ' + (s.huboRespuesta === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="respuestaSi">Sí</label></div><div class="radio-item"><input type="radio" id="respuestaNo" name="huboRespuesta" value="no" ' + (s.huboRespuesta === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="respuestaNo">No</label></div></div>' + (s.huboRespuesta === false ? '<div class="alert-box alert-warning">Llamar de nuevo</div>' : '') + '</div>';
+            html += '<div class="stage-section"><div class="stage-title">2. ¿Hubo respuesta?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="respuestaSi" name="huboRespuesta" value="si" ' + (s.huboRespuesta === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="respuestaSi">Sí</label></div><div class="radio-item"><input type="radio" id="respuestaNo" name="huboRespuesta" value="no" ' + (s.huboRespuesta === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="respuestaNo">No</label></div></div>' + (s.huboRespuesta === false ? '<div class="alert-box alert-warning">Llamar de nuevo</div>' : '') + '</div>';
             if (s.huboRespuesta !== true) return html;
 
-            html += '<div class="stage-section"><div class="stage-title">3. ¿Es inmobiliaria?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="inmobiliariaSi" name="esInmobiliaria" value="si" ' + (s.esInmobiliaria === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="inmobiliariaSi">Sí</label></div><div class="radio-item"><input type="radio" id="inmobiliariaNo" name="esInmobiliaria" value="no" ' + (s.esInmobiliaria === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="inmobiliariaNo">No</label></div></div>';
+            html += '<div class="stage-section"><div class="stage-title">3. ¿Es inmobiliaria?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="inmobiliariaSi" name="esInmobiliaria" value="si" ' + (s.esInmobiliaria === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="inmobiliariaSi">Sí</label></div><div class="radio-item"><input type="radio" id="inmobiliariaNo" name="esInmobiliaria" value="no" ' + (s.esInmobiliaria === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="inmobiliariaNo">No</label></div></div>';
             if (s.esInmobiliaria === true) {
                 html += '<div class="form-group" style="margin-top:15px"><label>¿Comparten?</label><div class="radio-group"><div class="radio-item"><input type="radio" id="compartenSi" name="compartenPropiedad" value="si" ' + (s.compartenPropiedad === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="compartenSi">Sí</label></div><div class="radio-item"><input type="radio" id="compartenNo" name="compartenPropiedad" value="no" ' + (s.compartenPropiedad === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="compartenNo">No</label></div></div></div><div class="form-group"><label>Nota:</label><textarea id="notaInmobiliaria">' + (s.notaInmobiliaria || '') + '</textarea></div>';
                 html += '<button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarComoInmobiliaria()">📁 Archivar como Inmobiliaria</button>';
@@ -3037,29 +3059,23 @@
             html += '</div>';
             if (s.esInmobiliaria !== false) return html;
 
-            html += '<div class="stage-section"><div class="stage-title">4. ¿Ya fue ' + (esAlquiler ? 'alquilada' : 'vendida') + '?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="vendidoSi" name="fueVendido" value="si" ' + (s.fueVendido === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="vendidoSi">Sí</label></div><div class="radio-item"><input type="radio" id="vendidoNo" name="fueVendido" value="no" ' + (s.fueVendido === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="vendidoNo">No</label></div></div>';
+            html += '<div class="stage-section"><div class="stage-title">4. ¿Ya fue ' + (esAlquiler ? 'alquilada' : 'vendida') + '?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="vendidoSi" name="fueVendido" value="si" ' + (s.fueVendido === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="vendidoSi">Sí</label></div><div class="radio-item"><input type="radio" id="vendidoNo" name="fueVendido" value="no" ' + (s.fueVendido === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="vendidoNo">No</label></div></div>';
             if (s.fueVendido === true) html += '<div class="alert-box alert-warning">Puede archivarse</div><button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarCliente()">Archivar</button>';
             html += '</div>';
             if (s.fueVendido !== false) return html;
 
-            html += '<div class="stage-section"><div class="stage-title">5. ¿Es el dueño?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="duenoSi" name="esDueno" value="si" ' + (s.esDueno === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="duenoSi">Sí</label></div><div class="radio-item"><input type="radio" id="duenoNo" name="esDueno" value="no" ' + (s.esDueno === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="duenoNo">No</label></div></div>';
+            html += '<div class="stage-section"><div class="stage-title">5. ¿Es el dueño?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="duenoSi" name="esDueno" value="si" ' + (s.esDueno === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="duenoSi">Sí</label></div><div class="radio-item"><input type="radio" id="duenoNo" name="esDueno" value="no" ' + (s.esDueno === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="duenoNo">No</label></div></div>';
             if (s.esDueno === false) html += '<div class="form-group" style="margin-top:15px"><label>Nota:</label><textarea id="notaNoDueno">' + (s.notaNoDueno || '') + '</textarea></div><div class="form-group"><label>Tel dueño:</label><input type="tel" id="numeroNuevoDueno" value="' + (s.numeroNuevoDueno || '') + '"></div>';
             html += '</div>';
             if (s.esDueno !== true && s.esDueno !== false) return html;
 
             if (esAlquiler) {
-                html += '<div class="stage-section"><div class="stage-title">6. ¿Acepta alquiler con nosotros?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="preTasacionSi" name="aceptaPreTasacion" value="si" ' + (s.aceptaPreTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="preTasacionNo" name="aceptaPreTasacion" value="no" ' + (s.aceptaPreTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionNo">No</label></div></div>';
+                html += '<div class="stage-section"><div class="stage-title">6. ¿Acepta alquiler con nosotros?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="preTasacionSi" name="aceptaPreTasacion" value="si" ' + (s.aceptaPreTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="preTasacionNo" name="aceptaPreTasacion" value="no" ' + (s.aceptaPreTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionNo">No</label></div></div>';
                 if (s.aceptaPreTasacion === false) html += '<div class="alert-box alert-warning">Seguimiento o archivar</div><button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarCliente()">Archivar</button>';
                 html += '</div>';
-                
-                if (s.aceptaPreTasacion === true) {
-                    html += '<div class="stage-section"><div class="stage-title">7. ¿Lo alquilamos nosotros?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="loAlquilamosSi" name="loAlquilamosNosotros" value="si" ' + (s.loAlquilamosNosotros === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="loAlquilamosSi">Sí</label></div><div class="radio-item"><input type="radio" id="loAlquilamosNo" name="loAlquilamosNosotros" value="no" ' + (s.loAlquilamosNosotros === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="loAlquilamosNo">No</label></div></div>';
-                    if (s.loAlquilamosNosotros === false) html += '<div class="alert-box alert-warning">Archivar cliente</div><button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarCliente()">Archivar</button>';
-                    html += '</div>';
-                }
                 return html;
             } else {
-                html += '<div class="stage-section"><div class="stage-title">6. ¿Acepta pre-tasación?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="preTasacionSi" name="aceptaPreTasacion" value="si" ' + (s.aceptaPreTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="preTasacionNo" name="aceptaPreTasacion" value="no" ' + (s.aceptaPreTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionNo">No</label></div></div>';
+                html += '<div class="stage-section"><div class="stage-title">6. ¿Acepta pre-tasación?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="preTasacionSi" name="aceptaPreTasacion" value="si" ' + (s.aceptaPreTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="preTasacionNo" name="aceptaPreTasacion" value="no" ' + (s.aceptaPreTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionNo">No</label></div></div>';
                 if (s.aceptaPreTasacion === false) html += '<div class="alert-box alert-warning">Seguimiento o archivar</div><button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarCliente()">Archivar</button>';
                 html += '</div>';
             }
@@ -3069,7 +3085,7 @@
             html += '<div class="stage-section"><div class="stage-title">7. Entrega de Tasación</div><div class="form-group"><label>Fecha entrega</label><input type="date" id="fechaEntrega" value="' + (s.fechaEntrega || '') + '" onchange="updateFollowUp()"></div><div class="form-group"><label>Modalidad</label><select id="modalidadEntrega" onchange="updateFollowUp()"><option value="">Seleccionar...</option><option value="Presencial" ' + (s.modalidadEntrega === 'Presencial' ? 'selected' : '') + '>Presencial</option><option value="Email" ' + (s.modalidadEntrega === 'Email' ? 'selected' : '') + '>Email</option><option value="WhatsApp" ' + (s.modalidadEntrega === 'WhatsApp' ? 'selected' : '') + '>WhatsApp</option><option value="Correo" ' + (s.modalidadEntrega === 'Correo' ? 'selected' : '') + '>Correo postal</option></select></div><div class="form-group"><label>Agente que entregó</label><input type="text" id="personaEntrega" value="' + (s.personaEntrega || currentAgent) + '" readonly style="background:#f0f0f0"></div>' + (s.fechaEntrega ? '<div class="timestamp-display">Fecha: ' + s.fechaEntrega + '</div>' : '') + '<div class="radio-group" style="margin-top:15px"><div class="radio-item"><input type="radio" id="entregadaSi" name="tasacionEntregada" value="si" ' + (s.tasacionEntregada === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="entregadaSi">Entregada</label></div><div class="radio-item"><input type="radio" id="entregadaNo" name="tasacionEntregada" value="no" ' + (s.tasacionEntregada === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="entregadaNo">No</label></div></div></div>';
             if (s.tasacionEntregada !== true) return html;
 
-            html += '<div class="stage-section"><div class="stage-title">8. ¿Acepta la tasación?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="aceptaTasacionSi" name="aceptaTasacion" value="si" ' + (s.aceptaTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="aceptaTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="aceptaTasacionNo" name="aceptaTasacion" value="no" ' + (s.aceptaTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="aceptaTasacionNo">No</label></div></div>';
+            html += '<div class="stage-section"><div class="stage-title">8. ¿Acepta la tasación?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="aceptaTasacionSi" name="aceptaTasacion" value="si" ' + (s.aceptaTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="aceptaTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="aceptaTasacionNo" name="aceptaTasacion" value="no" ' + (s.aceptaTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="aceptaTasacionNo">No</label></div></div>';
             if (s.aceptaTasacion === false) html += '<button type="button" class="btn btn-warning" style="margin-top:15px;width:100%;background:#ffc107;color:#333;" onclick="archivarConSeguimiento()">📋 Archivar con Seguimiento</button>';
             html += '</div>';
             if (s.aceptaTasacion !== true) return html;
@@ -3077,7 +3093,7 @@
             html += '<div class="stage-section"><div class="stage-title">9. Tipo de Exclusiva</div><div class="form-group"><select id="tipoExclusiva" onchange="updateFollowUp()"><option value="">Seleccionar...</option><option value="Exclusiva" ' + (s.tipoExclusiva === 'Exclusiva' ? 'selected' : '') + '>Exclusiva</option><option value="No Exclusiva" ' + (s.tipoExclusiva === 'No Exclusiva' ? 'selected' : '') + '>No Exclusiva</option><option value="Otra Modalidad" ' + (s.tipoExclusiva === 'Otra Modalidad' ? 'selected' : '') + '>Otra Modalidad</option></select></div></div>';
             if (!s.tipoExclusiva) return html;
 
-            html += '<div class="stage-section"><div class="stage-title">10. ¿Publicaste?' + clearBtn + '</div><div class="radio-group"><div class="radio-item"><input type="radio" id="publicasteSi" name="publicaste" value="si" ' + (s.publicaste === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="publicasteSi">Sí</label></div><div class="radio-item"><input type="radio" id="publicasteNo" name="publicaste" value="no" ' + (s.publicaste === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="publicasteNo">No</label></div></div>';
+            html += '<div class="stage-section"><div class="stage-title">10. ¿Publicaste?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="publicasteSi" name="publicaste" value="si" ' + (s.publicaste === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="publicasteSi">Sí</label></div><div class="radio-item"><input type="radio" id="publicasteNo" name="publicaste" value="no" ' + (s.publicaste === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="publicasteNo">No</label></div></div>';
             if (s.publicaste === true) {
                 var plataformas = ['Mercado Libre', 'Infocasas', 'Gallito', 'Facebook Marketplace', 'Instagram', 'Sitio Web Propio', 'Otros'];
                 html += '<div class="form-group" style="margin-top:15px"><label>¿Dónde?</label><div class="checkbox-group">';
@@ -3092,35 +3108,43 @@
             return html;
         }
 
-        function clearRadio(btn) {
-            // Encontrar la sección padre y desmarcar todos los radio buttons
-            var section = btn.closest('.stage-section');
-            if (section) {
-                var radios = section.querySelectorAll('input[type="radio"]');
-                for (var i = 0; i < radios.length; i++) {
-                    radios[i].checked = false;
-                }
-                updateFollowUp();
-            }
-        }
-
         function updateFollowUp() {
             var client = clients[currentClientIndex];
             var s = client.seguimiento;
             var getValue = function(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value === 'si' : null; };
             var getVal = function(id) { var el = document.getElementById(id); return el ? el.value : null; };
 
-            s.seLlamo = getValue('seLlamo');
+            // Guardar el estado anterior de seLlamo para detectar cambios
+            var seLlamoAnterior = s.seLlamo;
+            var nuevoSeLlamo = getValue('seLlamo');
             
-            // Solo registrar llamada UNA VEZ cuando se marca "Sí" por primera vez
-            // El flag llamadaInicialRegistrada evita duplicados
-            if (s.seLlamo === true && !s.llamadaInicialRegistrada) {
+            // Manejar cambios en "Se realizó la llamada"
+            if (nuevoSeLlamo === true && seLlamoAnterior !== true && !s.llamadaInicialRegistrada) {
+                // Agregar llamada inicial por primera vez
                 client.historialLlamadas = client.historialLlamadas || [];
-                client.historialLlamadas.push({ fecha: new Date().toISOString().split('T')[0], hora: new Date().toTimeString().slice(0, 5), nota: 'Llamada inicial' });
+                client.historialLlamadas.push({ 
+                    fecha: new Date().toISOString().split('T')[0], 
+                    hora: new Date().toTimeString().slice(0, 5), 
+                    nota: 'Llamada inicial', 
+                    esInicial: true 
+                });
                 client.cantidadLlamadas = client.historialLlamadas.length;
                 client.ultimoContacto = new Date().toISOString();
-                s.llamadaInicialRegistrada = true; // Marcar para no duplicar
+                s.llamadaInicialRegistrada = true;
+            } else if (nuevoSeLlamo === false && s.llamadaInicialRegistrada) {
+                // Cambió de Sí a No - eliminar llamada inicial del historial
+                if (client.historialLlamadas && client.historialLlamadas.length > 0) {
+                    for (var k = client.historialLlamadas.length - 1; k >= 0; k--) {
+                        if (client.historialLlamadas[k].esInicial || client.historialLlamadas[k].nota === 'Llamada inicial') {
+                            client.historialLlamadas.splice(k, 1);
+                            break;
+                        }
+                    }
+                    client.cantidadLlamadas = client.historialLlamadas.length;
+                }
+                s.llamadaInicialRegistrada = false;
             }
+            s.seLlamo = nuevoSeLlamo;
 
             s.huboRespuesta = getValue('huboRespuesta');
             if (s.huboRespuesta) client.ultimoContacto = new Date().toISOString();
@@ -3130,7 +3154,6 @@
             s.fueVendido = getValue('fueVendido');
             s.esDueno = getValue('esDueno');
             s.aceptaPreTasacion = getValue('aceptaPreTasacion');
-            s.loAlquilamosNosotros = getValue('loAlquilamosNosotros');
             s.tasacionEntregada = getValue('tasacionEntregada');
             if (s.tasacionEntregada) client.ultimoContacto = new Date().toISOString();
             s.aceptaTasacion = getValue('aceptaTasacion');
@@ -3544,7 +3567,7 @@
                 if (s.tipoExclusiva) exclusivas++;
                 if (s.publicaste === true) publicadas++;
                 if (s.vendida) vendidas++;
-                if (client.tipoOperacion === 'alquiler' && s.loAlquilamosNosotros === false) otraInmobiliaria++;
+                if (client.tipoOperacion === 'alquiler' && s.motivoArchivo === 'alquilado_otra_inmobiliaria') otraInmobiliaria++;
                 totalLlamadas += client.cantidadLlamadas || 0;
             }
             document.getElementById('statLlamado').textContent = llamados;
@@ -3681,15 +3704,14 @@
                 var client = clients[i];
                 if (client.agente !== agentName) continue;
                 
-                // Contar llamadas del mes actual
-                if (client.historialLlamadas && client.historialLlamadas.length > 0) {
-                    for (var j = 0; j < client.historialLlamadas.length; j++) {
-                        var llamada = client.historialLlamadas[j];
-                        if (llamada.fecha) {
-                            var fechaLlamada = parseLocalDate(llamada.fecha.split('T')[0]);
-                            if (fechaLlamada && fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
-                                llamadas++;
-                            }
+                // Contar llamada del seguimiento si seLlamo = true
+                // Usar fechaCreacion o ultimoContacto como referencia de fecha
+                if (client.seguimiento.seLlamo === true) {
+                    var fechaRef = client.ultimoContacto || client.fechaCreacion;
+                    if (fechaRef) {
+                        var fechaLlamada = parseLocalDate(fechaRef.split('T')[0]);
+                        if (fechaLlamada && fechaLlamada.getMonth() === currentMonth && fechaLlamada.getFullYear() === currentYear) {
+                            llamadas++;
                         }
                     }
                 }
@@ -3704,22 +3726,23 @@
                 
                 // Contar exclusivas y no exclusivas del mes (solo ventas)
                 if (client.tipoOperacion === 'venta' && client.seguimiento.tipoExclusiva) {
-                    var fechaRef = client.seguimiento.fechaEntrega || client.fechaCreacion;
-                    if (fechaRef) {
-                        var fechaExc = parseLocalDate(fechaRef.split('T')[0]);
+                    var fechaRefExc = client.seguimiento.fechaEntrega || client.fechaCreacion;
+                    if (fechaRefExc) {
+                        var fechaExc = parseLocalDate(fechaRefExc.split('T')[0]);
                         if (fechaExc && fechaExc.getMonth() === currentMonth && fechaExc.getFullYear() === currentYear) {
                             if (client.seguimiento.tipoExclusiva === 'No Exclusiva') {
                                 noExclusivas++;
                             } else if (client.seguimiento.tipoExclusiva === 'Exclusiva') {
                                 exclusivas++;
                             }
+                            // "Otra Modalidad" NO cuenta
                         }
                     }
                 }
                 
-                // Contar alquileres publicados del mes actual
-                if (client.tipoOperacion === 'alquiler' && client.seguimiento.loAlquilamosNosotros === true && !client.seguimiento.vendida) {
-                    var fechaRefAlq = client.seguimiento.fechaEntrega || client.fechaCreacion;
+                // Contar alquileres publicados del mes actual (aceptaPreTasacion = true, no vendido)
+                if (client.tipoOperacion === 'alquiler' && client.seguimiento.aceptaPreTasacion === true && !client.seguimiento.vendida) {
+                    var fechaRefAlq = client.ultimoContacto || client.fechaCreacion;
                     if (fechaRefAlq) {
                         var fechaPub = parseLocalDate(fechaRefAlq.split('T')[0]);
                         if (fechaPub && fechaPub.getMonth() === currentMonth && fechaPub.getFullYear() === currentYear) {
@@ -4027,7 +4050,7 @@
                 }
                 
                 // Contar alquileres por otra inmobiliaria
-                if (client.tipoOperacion === 'alquiler' && client.seguimiento.loAlquilamosNosotros === false) {
+                if (client.tipoOperacion === 'alquiler' && client.seguimiento.motivoArchivo === 'alquilado_otra_inmobiliaria') {
                     if (client.fechaArchivado) {
                         var fa = parseLocalDate(client.fechaArchivado.split('T')[0]);
                         if (fa && fa.getFullYear() === year && fa.getMonth() + 1 === month) otraInmobiliaria++;
@@ -5303,7 +5326,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.8.8';
+        var APP_VERSION = '2.9.0';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5331,7 +5354,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.8.8 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.9.0 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
