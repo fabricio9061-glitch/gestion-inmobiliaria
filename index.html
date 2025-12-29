@@ -2773,7 +2773,7 @@
                 
                 if (client.tipoOperacion === 'alquiler') {
                     // Alquileres: llamadas (1pt), alquiler publicado (5pt), alquiler cerrado (25pt)
-                    var alqPublicado = (s.aceptaPreTasacion === true && !s.vendida) ? 1 : 0;
+                    var alqPublicado = (s.publicaste === true && !s.vendida) ? 1 : 0;
                     var alqCerrado = (s.vendida && client.venta) ? 1 : 0;
                     
                     puntosHistoricos = (llamadasCount * 1) + (alqPublicado * 5) + (alqCerrado * 25);
@@ -3073,6 +3073,22 @@
                 html += '<div class="stage-section"><div class="stage-title">6. ¿Acepta alquiler con nosotros?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="preTasacionSi" name="aceptaPreTasacion" value="si" ' + (s.aceptaPreTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="preTasacionNo" name="aceptaPreTasacion" value="no" ' + (s.aceptaPreTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionNo">No</label></div></div>';
                 if (s.aceptaPreTasacion === false) html += '<div class="alert-box alert-warning">Seguimiento o archivar</div><button type="button" class="btn btn-danger" style="margin-top:15px;width:100%" onclick="archivarCliente()">Archivar</button>';
                 html += '</div>';
+                
+                // Para alquileres: si acepta, preguntar si publicó
+                if (s.aceptaPreTasacion === true) {
+                    html += '<div class="stage-section"><div class="stage-title">7. ¿Lo publicaste?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="publicasteSi" name="publicaste" value="si" ' + (s.publicaste === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="publicasteSi">Sí</label></div><div class="radio-item"><input type="radio" id="publicasteNo" name="publicaste" value="no" ' + (s.publicaste === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="publicasteNo">No</label></div></div>';
+                    if (s.publicaste === true) {
+                        var plataformas = ['Mercado Libre', 'Infocasas', 'Gallito', 'Facebook Marketplace', 'Instagram', 'Sitio Web Propio', 'Otros'];
+                        html += '<div class="form-group" style="margin-top:15px"><label>¿Dónde?</label><div class="checkbox-group">';
+                        for (var p = 0; p < plataformas.length; p++) {
+                            var plat = plataformas[p];
+                            var isChecked = s.plataformasPublicacion && s.plataformasPublicacion.indexOf(plat) !== -1;
+                            html += '<div class="checkbox-item"><input type="checkbox" id="plat_' + plat.replace(/\s/g, '') + '" value="' + plat + '" ' + (isChecked ? 'checked' : '') + '><label for="plat_' + plat.replace(/\s/g, '') + '">' + plat + '</label></div>';
+                        }
+                        html += '</div></div>';
+                    }
+                    html += '</div>';
+                }
                 return html;
             } else {
                 html += '<div class="stage-section"><div class="stage-title">6. ¿Acepta pre-tasación?</div><div class="radio-group"><div class="radio-item"><input type="radio" id="preTasacionSi" name="aceptaPreTasacion" value="si" ' + (s.aceptaPreTasacion === true ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionSi">Sí</label></div><div class="radio-item"><input type="radio" id="preTasacionNo" name="aceptaPreTasacion" value="no" ' + (s.aceptaPreTasacion === false ? 'checked' : '') + ' onchange="updateFollowUp()"><label for="preTasacionNo">No</label></div></div>';
@@ -3148,15 +3164,71 @@
 
             s.huboRespuesta = getValue('huboRespuesta');
             if (s.huboRespuesta) client.ultimoContacto = new Date().toISOString();
+            // Reset cascada: si huboRespuesta es false, resetear todo lo que sigue
+            if (s.huboRespuesta === false) {
+                s.esInmobiliaria = null;
+                s.compartenPropiedad = null;
+                s.fueVendido = null;
+                s.esDueno = null;
+                s.aceptaPreTasacion = null;
+                s.tasacionEntregada = null;
+                s.aceptaTasacion = null;
+                s.tipoExclusiva = '';
+                s.publicaste = null;
+                s.fechaEntrega = '';
+                s.modalidadEntrega = '';
+            }
+            
             s.esInmobiliaria = getValue('esInmobiliaria');
             
             s.compartenPropiedad = getValue('compartenPropiedad');
             s.fueVendido = getValue('fueVendido');
+            // Reset cascada: si fueVendido es true (ya fue vendido/alquilado por otro), resetear
+            if (s.fueVendido === true) {
+                s.esDueno = null;
+                s.aceptaPreTasacion = null;
+                s.tasacionEntregada = null;
+                s.aceptaTasacion = null;
+                s.tipoExclusiva = '';
+                s.publicaste = null;
+            }
+            
             s.esDueno = getValue('esDueno');
+            // Reset cascada: si esDueno es false, resetear lo que sigue
+            if (s.esDueno === false) {
+                s.aceptaPreTasacion = null;
+                s.tasacionEntregada = null;
+                s.aceptaTasacion = null;
+                s.tipoExclusiva = '';
+                s.publicaste = null;
+            }
+            
             s.aceptaPreTasacion = getValue('aceptaPreTasacion');
+            // Reset cascada: si aceptaPreTasacion es false, resetear lo que sigue
+            if (s.aceptaPreTasacion === false) {
+                s.tasacionEntregada = null;
+                s.aceptaTasacion = null;
+                s.tipoExclusiva = '';
+                s.publicaste = null;
+                s.fechaEntrega = '';
+                s.modalidadEntrega = '';
+            }
+            
             s.tasacionEntregada = getValue('tasacionEntregada');
             if (s.tasacionEntregada) client.ultimoContacto = new Date().toISOString();
+            // Reset cascada: si tasacionEntregada es false, resetear lo que sigue
+            if (s.tasacionEntregada === false) {
+                s.aceptaTasacion = null;
+                s.tipoExclusiva = '';
+                s.publicaste = null;
+            }
+            
             s.aceptaTasacion = getValue('aceptaTasacion');
+            // Reset cascada: si aceptaTasacion es false, resetear lo que sigue
+            if (s.aceptaTasacion === false) {
+                s.tipoExclusiva = '';
+                s.publicaste = null;
+            }
             
             // Solo actualizar publicaste si el elemento existe en el DOM
             var publicasteVal = getValue('publicaste');
@@ -3740,8 +3812,8 @@
                     }
                 }
                 
-                // Contar alquileres publicados del mes actual (aceptaPreTasacion = true, no vendido)
-                if (client.tipoOperacion === 'alquiler' && client.seguimiento.aceptaPreTasacion === true && !client.seguimiento.vendida) {
+                // Contar alquileres publicados del mes actual (publicaste = true, no vendido)
+                if (client.tipoOperacion === 'alquiler' && client.seguimiento.publicaste === true && !client.seguimiento.vendida) {
                     var fechaRefAlq = client.ultimoContacto || client.fechaCreacion;
                     if (fechaRefAlq) {
                         var fechaPub = parseLocalDate(fechaRefAlq.split('T')[0]);
@@ -5326,7 +5398,7 @@
         }
 
         // ============ INFORMACIÓN DE VERSIÓN ============
-        var APP_VERSION = '2.9.0';
+        var APP_VERSION = '2.9.1';
         var APP_BUILD_DATE = '28/12/2025';
         
         function showVersionInfo() {
@@ -5354,7 +5426,7 @@
         margin-right: auto;
     ">
         <span onclick="showVersionInfo()" style="cursor: pointer;" title="Ver información de versión">
-            🏢 Gestión de Clientes | Versión: 2.9.0 | © 2025 Anibal Malave
+            🏢 Gestión de Clientes | Versión: 2.9.1 | © 2025 Anibal Malave
         </span>
     </footer>
 </body>
